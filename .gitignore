@@ -1,0 +1,15 @@
+# Mockups
+mockup-*.html
+
+# Unused assets
+beach*.png
+bowl*.png
+island*.png
+tank*.png
+grass2.png
+brain_preview.html
+beach_scene*.png
+water.jpg
+grass.png
+
+.DS_Store

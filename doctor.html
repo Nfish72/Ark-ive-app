@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Patient Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f4f7fa;--card:#fff;--border:#e2e8f0;
+  --text:#1a2a3a;--muted:#5a7080;--accent:#0077b6;
+  --green:#2d9a4e;--yellow:#c09820;--orange:#d07020;--red:#c03030;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%}
+
+/* Header */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:12px 16px;
+}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.header h1{font-size:18px;font-weight:700;color:var(--accent)}
+.header .badge{font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600}
+.date-controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.date-controls label{font-size:12px;color:var(--muted);font-weight:600}
+.date-controls input[type=date]{
+  font-size:14px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;
+  background:#fff;color:var(--text);font-family:var(--font);
+}
+.range-btns{display:flex;gap:4px;margin-left:auto}
+.range-btn{
+  font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:14px;
+  background:#fff;color:var(--muted);font-weight:600;cursor:pointer;
+}
+.range-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Sections */
+.section{padding:16px;border-bottom:8px solid var(--bg)}
+.section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.section-title .icon{font-size:16px}
+
+/* Summary cards */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.stat-value{font-size:28px;font-weight:800;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.stat-value.green{color:var(--green)}
+.stat-value.yellow{color:var(--yellow)}
+.stat-value.orange{color:var(--orange)}
+.stat-value.red{color:var(--red)}
+
+/* Type breakdown */
+.type-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)}
+.type-row:last-child{border-bottom:none}
+.type-name{font-size:13px;font-weight:600;width:80px;flex-shrink:0}
+.type-bar-wrap{flex:1;height:22px;background:#eef2f7;border-radius:6px;overflow:hidden;position:relative}
+.type-bar{height:100%;border-radius:6px;transition:width 0.3s}
+.type-count{font-size:12px;font-weight:700;width:30px;text-align:right;color:var(--muted)}
+.type-avg{font-size:11px;color:var(--muted);width:50px;text-align:right}
+
+/* Severity chart */
+.chart-container{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.chart-svg{display:block}
+
+/* Brain heatmap */
+.brain-wrap{display:flex;justify-content:center;padding:8px 0}
+.brain-container{position:relative;width:320px;max-width:100%}
+.brain-container img{width:100%;height:auto;display:block}
+.brain-container svg{position:absolute;top:0;left:0;width:100%;height:100%}
+.brain-zone{cursor:default;transition:opacity 0.15s}
+.brain-zone-label{pointer-events:none}
+.heatmap-legend{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:12px;font-size:11px;color:var(--muted)}
+.heatmap-legend .swatch{width:16px;height:10px;border-radius:2px}
+.brain-region-list{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:12px;font-size:12px}
+.brain-region-item{display:flex;align-items:center;gap:6px;padding:3px 0}
+.brain-region-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.brain-region-name{color:var(--text);font-weight:600}
+.brain-region-count{color:var(--muted);margin-left:auto}
+
+/* Timeline */
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:8px 0 8px 16px;font-size:13px}
+.tl-item::before{
+  content:'';position:absolute;left:-18px;top:12px;
+  width:10px;height:10px;border-radius:50%;border:2px solid #fff;
+}
+.tl-item.symptom::before{background:var(--accent)}
+.tl-item.med::before{background:var(--green)}
+.tl-item.missed::before{background:var(--red)}
+.tl-date{font-size:12px;font-weight:700;color:var(--accent);padding:12px 0 4px 16px;position:relative}
+.tl-date::before{content:'';position:absolute;left:-18px;top:16px;width:10px;height:10px;border-radius:2px;background:var(--accent)}
+.tl-type{font-weight:600}
+.tl-sev{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;color:#fff;margin-left:4px}
+.tl-desc{color:var(--muted);font-size:12px;margin-top:2px}
+
+/* Med adherence */
+.med-adherence-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.med-adherence-name{font-size:14px;font-weight:700;margin-bottom:6px}
+.med-adherence-bar-wrap{height:8px;background:#eef2f7;border-radius:4px;overflow:hidden;margin-bottom:4px}
+.med-adherence-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#3db85e)}
+.med-adherence-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:8px}
+.cal-cell{width:100%;aspect-ratio:1;border-radius:3px;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.cal-taken{background:rgba(45,154,78,0.25);color:var(--green)}
+.cal-missed{background:rgba(192,48,48,0.2);color:var(--red)}
+.cal-empty{background:#f0f3f6;color:transparent}
+.cal-header{font-size:9px;color:var(--muted);text-align:center;font-weight:700}
+
+/* As-needed summary */
+.asn-table{width:100%;border-collapse:collapse;font-size:13px}
+.asn-table th{text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;padding:6px 8px;border-bottom:2px solid var(--border)}
+.asn-table td{padding:6px 8px;border-bottom:1px solid var(--bg)}
+
+/* Symptom detail table */
+.detail-table{width:100%;border-collapse:collapse;font-size:12px}
+.detail-table th{
+  text-align:left;font-size:10px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;padding:6px 6px;
+  border-bottom:2px solid var(--border);position:sticky;top:0;background:#fff;
+}
+.detail-table td{padding:6px;border-bottom:1px solid var(--bg);vertical-align:top}
+.detail-table tr:nth-child(even) td{background:rgba(0,0,0,0.015)}
+.sev-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+
+/* Collapsible */
+.collapsible-header{cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
+.collapsible-header .arrow{transition:transform 0.2s;font-size:12px;color:var(--muted)}
+.collapsible-header.open .arrow{transform:rotate(90deg)}
+.collapsible-body{overflow:hidden;max-height:0;transition:max-height 0.3s ease}
+.collapsible-body.open{max-height:5000px}
+
+/* No data */
+.no-data{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px}
+
+/* Back button */
+.back-btn{
+  font-size:13px;color:var(--accent);background:none;border:none;
+  font-weight:600;cursor:pointer;padding:0;font-family:var(--font);
+}
+
+/* Print-friendly */
+@media print{
+  .header{position:static}
+  .range-btns,.date-controls,.back-btn{display:none}
+  body{background:#fff}
+  .section{border-bottom:1px solid #ddd;page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <button class="back-btn" onclick="window.location.href='index.html'">&larr; Back to App</button>
+    <span class="badge">READ ONLY</span>
+  </div>
+  <h1>Patient Symptom Report</h1>
+  <div class="date-controls">
+    <label>From</label>
+    <input type="date" id="date-from">
+    <label>To</label>
+    <input type="date" id="date-to">
+    <div class="range-btns">
+      <button class="range-btn" data-days="7">7d</button>
+      <button class="range-btn active" data-days="30">30d</button>
+      <button class="range-btn" data-days="90">90d</button>
+      <button class="range-btn" data-days="all">All</button>
+    </div>
+  </div>
+</div>
+
+<div id="report-body"></div>
+
+<script>
+// ========== DATA ACCESS ==========
+const DB = {
+  get(key, fallback) { try { return JSON.parse(localStorage.getItem('st_' + key)) || fallback } catch { return fallback } }
+};
+const DEFAULT_TYPES = ['Headache','Nausea','Fatigue','Pain','Dizziness','Anxiety','Insomnia','Digestive','Other'];
+function getSymptoms() { return DB.get('symptoms', []) }
+function getMeds() { return DB.get('medications', []) }
+function getMedLogs() { return DB.get('medLogs', []) }
+function getTypes() { return DB.get('types', DEFAULT_TYPES) }
+
+// ========== HEAD MAP DATA ==========
+const HEAD_REGIONS = {
+  front: [
+    { id: 'forehead_left', label: 'Forehead L', d: 'M28,22 Q35,14 50,18 L50,32 Q38,30 28,34Z', lx:38, ly:25 },
+    { id: 'forehead_right', label: 'Forehead R', d: 'M50,18 Q65,14 72,22 L72,34 Q62,30 50,32Z', lx:62, ly:25 },
+    { id: 'left_temple', label: 'L Temple', d: 'M20,34 Q23,28 28,22 L28,34 L28,50 Q23,48 20,42Z', lx:24, ly:38 },
+    { id: 'right_temple', label: 'R Temple', d: 'M72,22 Q77,28 80,34 L80,42 Q77,48 72,50 L72,34Z', lx:76, ly:38 },
+    { id: 'behind_left_eye', label: 'L Eye', d: 'M30,36 Q38,33 48,35 L48,47 Q38,49 30,47Z', lx:38, ly:41 },
+    { id: 'behind_right_eye', label: 'R Eye', d: 'M52,35 Q62,33 70,36 L70,47 Q62,49 52,47Z', lx:62, ly:41 },
+    { id: 'nose_sinus', label: 'Sinus', d: 'M40,49 Q50,47 60,49 L57,62 Q50,64 43,62Z', lx:50, ly:55 },
+    { id: 'jaw', label: 'Jaw', d: 'M28,55 Q30,50 40,49 L43,62 Q36,68 30,70 Q26,65 28,55Z', lx:34, ly:62 },
+  ],
+  back: [
+    { id: 'crown', label: 'Crown', d: 'M30,18 Q50,10 70,18 L70,32 Q50,28 30,32Z', lx:50, ly:23 },
+    { id: 'back_upper_left', label: 'Upper L', d: 'M24,32 Q26,26 30,18 L30,32 L50,28 L50,48 Q38,46 24,48Z', lx:36, ly:38 },
+    { id: 'back_upper_right', label: 'Upper R', d: 'M50,28 L70,32 L70,18 Q74,26 76,32 L76,48 Q62,46 50,48Z', lx:64, ly:38 },
+    { id: 'back_lower_left', label: 'Lower L', d: 'M24,48 Q38,46 50,48 L50,64 Q38,66 26,62Z', lx:36, ly:55 },
+    { id: 'back_lower_right', label: 'Lower R', d: 'M50,48 Q62,46 76,48 L74,62 Q62,66 50,64Z', lx:64, ly:55 },
+    { id: 'skull_base', label: 'Base', d: 'M26,62 Q38,66 50,64 Q62,66 74,62 L70,76 Q50,82 30,76Z', lx:50, ly:70 },
+  ],
+  left: [
+    { id: 'left_forehead', label: 'Forehead', d: 'M55,18 Q62,16 68,22 L68,36 Q62,33 55,34Z', lx:62, ly:27 },
+    { id: 'left_top', label: 'Top', d: 'M35,16 Q45,10 55,18 L55,34 Q45,30 35,32Z', lx:45, ly:23 },
+    { id: 'left_side', label: 'Side', d: 'M25,32 Q28,24 35,16 L35,32 L35,58 Q28,54 25,48Z', lx:30, ly:40 },
+    { id: 'left_eye_area', label: 'Eye', d: 'M55,34 Q62,33 68,36 L68,48 Q62,47 55,48Z', lx:62, ly:41 },
+    { id: 'left_back_head', label: 'Back', d: 'M25,48 Q28,54 35,58 L35,32 Q30,34 25,32Z', lx:30, ly:52 },
+    { id: 'left_neck', label: 'Neck', d: 'M35,58 Q45,66 55,62 L55,78 Q45,80 38,74Z', lx:46, ly:68 },
+  ],
+  right: [
+    { id: 'right_forehead', label: 'Forehead', d: 'M32,22 Q38,16 45,18 L45,34 Q38,33 32,36Z', lx:38, ly:27 },
+    { id: 'right_top', label: 'Top', d: 'M45,18 Q55,10 65,16 L65,32 Q55,30 45,34Z', lx:55, ly:23 },
+    { id: 'right_side', label: 'Side', d: 'M65,16 Q72,24 75,32 L75,48 Q72,54 65,58 L65,32Z', lx:70, ly:40 },
+    { id: 'right_eye_area', label: 'Eye', d: 'M32,36 Q38,33 45,34 L45,48 Q38,47 32,48Z', lx:38, ly:41 },
+    { id: 'right_back_head', label: 'Back', d: 'M65,32 Q70,34 75,32 L75,48 Q72,54 65,58Z', lx:70, ly:52 },
+    { id: 'right_neck', label: 'Neck', d: 'M45,62 Q55,66 65,58 L62,74 Q55,80 45,78Z', lx:54, ly:68 },
+  ],
+  top: [
+    { id: 'top_front', label: 'Front', d: 'M30,55 Q40,52 50,54 Q60,52 70,55 L70,68 Q60,72 50,70 Q40,72 30,68Z', lx:50, ly:62 },
+    { id: 'top_left', label: 'Left', d: 'M22,30 Q24,24 30,20 L30,55 L30,68 Q24,64 22,55Z', lx:26, ly:42 },
+    { id: 'top_right', label: 'Right', d: 'M70,20 Q76,24 78,30 L78,55 Q76,64 70,68 L70,55Z', lx:74, ly:42 },
+    { id: 'top_crown', label: 'Crown', d: 'M30,20 Q50,12 70,20 L70,55 Q60,52 50,54 Q40,52 30,55Z', lx:50, ly:36 },
+    { id: 'top_back', label: 'Back', d: 'M30,68 Q40,72 50,70 Q60,72 70,68 L70,80 Q50,86 30,80Z', lx:50, ly:75 },
+  ]
+};
+// Maps app's headache location IDs → brain zones
+const BRAIN_ZONE_MAP = {
+  forehead_left:'L Frontal', forehead_right:'R Frontal',
+  left_forehead:'L Frontal', right_forehead:'R Frontal', top_front:'L Frontal',
+  left_temple:'L Temporal', right_temple:'R Temporal',
+  left_side:'L Temporal', right_side:'R Temporal',
+  top_left:'L Temporal', top_right:'R Temporal',
+  left_top:'L Parietal', right_top:'R Parietal',
+  crown:'L Parietal', top_crown:'R Parietal',
+  back_upper_left:'L Parietal', back_upper_right:'R Parietal',
+  back_lower_left:'L Occipital', back_lower_right:'R Occipital',
+  skull_base:'L Occipital', top_back:'L Occipital',
+  left_back_head:'L Occipital', right_back_head:'R Occipital',
+  left_neck:'L Occipital', right_neck:'R Occipital',
+  behind_left_eye:'L Frontal', behind_right_eye:'R Frontal',
+  left_eye_area:'L Frontal', right_eye_area:'R Frontal',
+  nose_sinus:'L Frontal', jaw:'L Temporal',
+};
+
+// Zone overlay paths mapped to the 626x626 brain image
+// Coordinates trace regions over the actual illustration
+const BRAIN_ZONES = {
+  'L Frontal':  { d:'M265,100 Q245,100 218,115 Q196,130 187,148 Q180,162 173,178 Q167,194 161,210 Q157,225 155,240 Q200,250 250,254 Q280,256 312,255 L312,100 Q290,98 265,100Z', lx:238, ly:180 },
+  'R Frontal':  { d:'M348,100 Q368,100 391,115 Q410,130 422,148 Q430,162 440,178 Q449,194 455,210 Q458,225 460,240 Q420,250 370,254 Q340,256 316,255 L316,100 Q330,98 348,100Z', lx:385, ly:180 },
+  'L Temporal': { d:'M155,240 Q150,255 143,275 Q136,295 132,315 Q128,340 126,365 Q125,385 126,400 Q130,420 140,435 Q148,440 160,440 Q168,430 172,415 Q176,395 178,370 Q180,345 180,320 Q180,300 184,278 Q188,260 195,245Z', lx:152, ly:340 },
+  'R Temporal': { d:'M460,240 Q466,255 472,275 Q478,295 484,315 Q488,340 492,365 Q494,385 494,400 Q490,420 479,435 Q470,440 458,440 Q450,430 446,415 Q442,395 440,370 Q438,345 438,320 Q438,300 434,278 Q430,260 424,245Z', lx:468, ly:340 },
+  'L Parietal':  { d:'M195,245 Q188,260 184,278 Q180,300 180,320 Q180,345 178,370 Q176,395 172,415 Q168,430 160,440 Q185,445 220,448 Q260,450 312,450 L312,255 Q280,256 250,254 Q200,250 155,240Z', lx:242, ly:360 },
+  'R Parietal':  { d:'M424,245 Q430,260 434,278 Q438,300 438,320 Q438,345 440,370 Q442,395 446,415 Q450,430 458,440 Q435,445 400,448 Q360,450 316,450 L316,255 Q340,256 370,254 Q420,250 460,240Z', lx:382, ly:360 },
+  'L Occipital': { d:'M160,440 Q140,435 126,400 Q130,430 140,450 Q150,465 162,478 Q180,495 205,508 Q230,518 260,524 L312,526 L312,450 Q260,450 220,448 Q185,445 160,440Z', lx:235, ly:490 },
+  'R Occipital': { d:'M458,440 Q479,435 494,400 Q490,430 479,450 Q468,465 456,478 Q438,495 413,508 Q388,518 360,524 L316,526 L316,450 Q360,450 400,448 Q435,445 458,440Z', lx:390, ly:490 },
+};
+
+// ========== UTILS ==========
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML }
+function fmtDate(d) { if (!d) return ''; const [y,m,day] = d.split('-'); return new Date(y,m-1,day).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) }
+function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return (hr%12||12)+':'+m+(hr<12?' AM':' PM') }
+function sevColor(v) { if (v<=3) return 'var(--green)'; if (v<=6) return 'var(--yellow)'; if (v<=8) return 'var(--orange)'; return 'var(--red)' }
+function sevClass(v) { if (v<=3) return 'green'; if (v<=6) return 'yellow'; if (v<=8) return 'orange'; return 'red' }
+function daysBetween(a,b) { return Math.round((new Date(b)-new Date(a))/(86400000)) + 1 }
+
+// ========== DATE RANGE ==========
+let dateFrom, dateTo;
+
+function initDateRange(days) {
+  const now = new Date();
+  dateTo = now.toISOString().split('T')[0];
+  if (days === 'all') {
+    const allSymptoms = getSymptoms();
+    const allMedLogs = getMedLogs();
+    const allDates = [...allSymptoms.map(s=>s.date), ...allMedLogs.map(l=>l.date)].filter(Boolean).sort();
+    dateFrom = allDates[0] || dateTo;
+  } else {
+    const from = new Date(now);
+    from.setDate(from.getDate() - (days - 1));
+    dateFrom = from.toISOString().split('T')[0];
+  }
+  document.getElementById('date-from').value = dateFrom;
+  document.getElementById('date-to').value = dateTo;
+  render();
+}
+
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    initDateRange(btn.dataset.days === 'all' ? 'all' : parseInt(btn.dataset.days));
+  });
+});
+
+document.getElementById('date-from').addEventListener('change', e => { dateFrom = e.target.value; document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active')); render() });
+document.getElementById('date-to').addEventListener('change', e => { dateTo = e.target.value; document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active')); render() });
+
+// ========== MAIN RENDER ==========
+function render() {
+  const symptoms = getSymptoms().filter(s => s.date >= dateFrom && s.date <= dateTo).sort((a,b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return (b.startTime||'').localeCompare(a.startTime||'');
+  });
+  const medLogs = getMedLogs().filter(l => l.date >= dateFrom && l.date <= dateTo);
+  const meds = getMeds();
+  const days = daysBetween(dateFrom, dateTo);
+
+  let html = '';
+  html += renderSummary(symptoms, medLogs, days);
+  html += renderTypeBreakdown(symptoms);
+  html += renderSeverityChart(symptoms);
+  html += renderHeadacheHeatmap(symptoms);
+  html += renderTimeline(symptoms, medLogs);
+  html += renderMedAdherence(meds, medLogs, days);
+  html += renderAsNeededSummary(medLogs);
+  html += renderDetailTable(symptoms);
+  document.getElementById('report-body').innerHTML = html;
+
+  // Wire up collapsibles
+  document.querySelectorAll('.collapsible-header').forEach(h => {
+    h.addEventListener('click', () => {
+      h.classList.toggle('open');
+      h.nextElementSibling.classList.toggle('open');
+    });
+  });
+}
+
+// ========== SECTION: SUMMARY ==========
+function renderSummary(symptoms, medLogs, days) {
+  const total = symptoms.length;
+  const avgSev = total ? (symptoms.reduce((s,x)=>s+x.severity,0)/total).toFixed(1) : '-';
+  const maxSev = total ? Math.max(...symptoms.map(s=>s.severity)) : '-';
+  const uniqueTypes = [...new Set(symptoms.map(s=>s.type))].length;
+  const medsTaken = medLogs.filter(l=>l.status==='taken').length;
+  const daysWithSymptoms = new Set(symptoms.map(s=>s.date)).size;
+  const pctDays = days > 0 ? Math.round(daysWithSymptoms/days*100) : 0;
+
+  return `<div class="section">
+    <div class="section-title">Summary &mdash; ${fmtDate(dateFrom)} to ${fmtDate(dateTo)}</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">${total}</div>
+        <div class="stat-label">Symptom Entries</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value ${sevClass(parseFloat(avgSev)||0)}">${avgSev}</div>
+        <div class="stat-label">Avg Severity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value ${sevClass(maxSev||0)}">${maxSev}</div>
+        <div class="stat-label">Peak Severity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${pctDays}%</div>
+        <div class="stat-label">Days w/ Symptoms</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${uniqueTypes}</div>
+        <div class="stat-label">Symptom Types</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green">${medsTaken}</div>
+        <div class="stat-label">Meds Taken</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ========== SECTION: TYPE BREAKDOWN ==========
+function renderTypeBreakdown(symptoms) {
+  if (!symptoms.length) return '';
+  const counts = {};
+  const sevTotals = {};
+  symptoms.forEach(s => {
+    counts[s.type] = (counts[s.type]||0) + 1;
+    sevTotals[s.type] = (sevTotals[s.type]||0) + s.severity;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0][1];
+
+  let rows = sorted.map(([type, count]) => {
+    const avg = (sevTotals[type]/count).toFixed(1);
+    const pct = (count/max*100).toFixed(0);
+    return `<div class="type-row">
+      <div class="type-name">${esc(type)}</div>
+      <div class="type-bar-wrap"><div class="type-bar" style="width:${pct}%;background:${sevColor(sevTotals[type]/count)}"></div></div>
+      <div class="type-count">${count}</div>
+      <div class="type-avg">avg ${avg}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="section">
+    <div class="section-title">Symptom Frequency by Type</div>
+    ${rows}
+  </div>`;
+}
+
+// ========== SECTION: SEVERITY CHART ==========
+function renderSeverityChart(symptoms) {
+  if (!symptoms.length) return '';
+
+  // Group by date, take max severity per date
+  const byDate = {};
+  symptoms.forEach(s => {
+    if (!byDate[s.date] || s.severity > byDate[s.date].max) {
+      byDate[s.date] = byDate[s.date] || { max: 0, types: [] };
+      byDate[s.date].max = Math.max(byDate[s.date].max, s.severity);
+      byDate[s.date].types.push(s.type);
+    } else {
+      byDate[s.date].types.push(s.type);
+    }
+  });
+
+  const dates = Object.keys(byDate).sort();
+  const barW = Math.max(16, Math.min(36, 320 / dates.length));
+  const gap = Math.max(2, Math.min(6, barW * 0.15));
+  const chartW = dates.length * (barW + gap) + 40;
+  const chartH = 160;
+  const plotH = 110;
+  const plotTop = 20;
+  const plotLeft = 30;
+
+  // Y-axis
+  let svg = `<svg class="chart-svg" width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}">`;
+  for (let i = 0; i <= 10; i += 2) {
+    const y = plotTop + plotH - (i / 10 * plotH);
+    svg += `<line x1="${plotLeft}" y1="${y}" x2="${chartW}" y2="${y}" stroke="#e8ecf0" stroke-width="0.5"/>`;
+    svg += `<text x="${plotLeft-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#8a9aaa">${i}</text>`;
+  }
+
+  // Bars
+  dates.forEach((date, i) => {
+    const x = plotLeft + i * (barW + gap);
+    const sev = byDate[date].max;
+    const h = sev / 10 * plotH;
+    const y = plotTop + plotH - h;
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${sevColor(sev)}" opacity="0.8"/>`;
+    svg += `<text x="${x + barW/2}" y="${y - 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${sevColor(sev)}">${sev}</text>`;
+    // Date label (show every Nth)
+    const showLabel = dates.length <= 14 || i % Math.ceil(dates.length / 14) === 0;
+    if (showLabel) {
+      const parts = date.split('-');
+      svg += `<text x="${x + barW/2}" y="${plotTop + plotH + 14}" text-anchor="middle" font-size="8" fill="#8a9aaa">${parseInt(parts[1])}/${parseInt(parts[2])}</text>`;
+    }
+  });
+
+  svg += '</svg>';
+
+  return `<div class="section">
+    <div class="section-title">Severity Over Time (daily peak)</div>
+    <div class="chart-container">${svg}</div>
+  </div>`;
+}
+
+// ========== SECTION: BRAIN HEATMAP ==========
+function renderHeadacheHeatmap(symptoms) {
+  const headaches = symptoms.filter(s => s.type === 'Headache' && s.headacheLocations && s.headacheLocations.length);
+  if (!headaches.length) return '';
+
+  // Aggregate raw locations → brain zones
+  const zoneFreq = {};
+  headaches.forEach(s => {
+    s.headacheLocations.forEach(loc => {
+      const zone = BRAIN_ZONE_MAP[loc] || loc;
+      zoneFreq[zone] = (zoneFreq[zone] || 0) + 1;
+    });
+  });
+  let maxFreq = Math.max(1, ...Object.values(zoneFreq));
+  const avgSev = (headaches.reduce((s,h)=>s+h.severity,0)/headaches.length).toFixed(1);
+
+  function zoneColor(zone) {
+    const c = zoneFreq[zone] || 0;
+    if (!c) return 'transparent';
+    const t = c / maxFreq;
+    if (t <= 0.33) return `rgba(255,220,60,${0.35 + t*0.6})`;
+    if (t <= 0.66) return `rgba(240,130,30,${0.35 + t*0.45})`;
+    return `rgba(210,45,45,${0.35 + t*0.45})`;
+  }
+
+  // Build overlay SVG
+  let svg = `<svg viewBox="0 0 626 626" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Overlay colored zones
+  Object.entries(BRAIN_ZONES).forEach(([name, z]) => {
+    const c = zoneFreq[name] || 0;
+    const fill = zoneColor(name);
+    svg += `<path class="brain-zone" d="${z.d}" fill="${fill}" stroke="${c ? 'rgba(180,60,30,0.3)' : 'transparent'}" stroke-width="${c ? 1.5 : 0}"/>`;
+  });
+
+  // Labels for zones with data
+  Object.entries(BRAIN_ZONES).forEach(([name, z]) => {
+    const c = zoneFreq[name] || 0;
+    if (c) {
+      // White text with dark outline for readability over colored regions
+      svg += `<text class="brain-zone-label" x="${z.lx}" y="${z.ly - 4}" text-anchor="middle" font-size="18" font-weight="800" fill="#fff" stroke="rgba(80,30,20,0.5)" stroke-width="0.5" font-family="Arial,sans-serif">${c}x</text>`;
+      svg += `<text class="brain-zone-label" x="${z.lx}" y="${z.ly + 14}" text-anchor="middle" font-size="11" font-weight="700" fill="rgba(60,20,10,0.75)" font-family="Arial,sans-serif">${name}</text>`;
+    }
+  });
+
+  // Orientation labels
+  svg += `<text x="313" y="38" text-anchor="middle" font-size="14" fill="#7a8a98" font-weight="600" font-family="Arial,sans-serif">Front</text>`;
+  svg += `<text x="313" y="615" text-anchor="middle" font-size="14" fill="#7a8a98" font-weight="600" font-family="Arial,sans-serif">Back</text>`;
+
+  svg += `</svg>`;
+
+  // Laterality
+  const leftTotal = (zoneFreq['L Frontal']||0) + (zoneFreq['L Parietal']||0) + (zoneFreq['L Temporal']||0) + (zoneFreq['L Occipital']||0);
+  const rightTotal = (zoneFreq['R Frontal']||0) + (zoneFreq['R Parietal']||0) + (zoneFreq['R Temporal']||0) + (zoneFreq['R Occipital']||0);
+  const total = leftTotal + rightTotal;
+  let laterality = 'Bilateral';
+  if (total > 0) {
+    const lPct = Math.round(leftTotal/total*100);
+    if (lPct >= 75) laterality = `Left-dominant (${lPct}%)`;
+    else if (lPct <= 25) laterality = `Right-dominant (${100-lPct}%)`;
+    else laterality = `Bilateral (L ${lPct}% / R ${100-lPct}%)`;
+  }
+
+  // Region summary list
+  const sortedZones = Object.entries(zoneFreq).sort((a,b) => b[1]-a[1]);
+  let regionList = sortedZones.map(([name, count]) => {
+    return `<div class="brain-region-item">
+      <div class="brain-region-dot" style="background:${zoneColor(name)}"></div>
+      <span class="brain-region-name">${name}</span>
+      <span class="brain-region-count">${count}x</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="section">
+    <div class="section-title">Headache Pain Distribution</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">
+      ${headaches.length} episode${headaches.length>1?'s':''} &middot; Avg severity ${avgSev}/10 &middot; ${laterality}
+    </div>
+    <div class="brain-wrap">
+      <div class="brain-container">
+        <img src="brain.png" alt="Brain top view">
+        ${svg}
+      </div>
+    </div>
+    <div class="heatmap-legend">
+      <span>No reports</span>
+      <div class="swatch" style="background:rgba(255,220,60,0.5)"></div>
+      <div class="swatch" style="background:rgba(240,130,30,0.55)"></div>
+      <div class="swatch" style="background:rgba(210,45,45,0.6)"></div>
+      <span>Frequent</span>
+    </div>
+    ${regionList ? `<div class="brain-region-list">${regionList}</div>` : ''}
+  </div>`;
+}
+
+// ========== SECTION: TIMELINE ==========
+function renderTimeline(symptoms, medLogs) {
+  // Merge and sort by date desc, time desc
+  const items = [];
+  symptoms.forEach(s => items.push({ kind:'symptom', date:s.date, time:s.startTime||'00:00', type:s.type, severity:s.severity, desc:s.description }));
+  medLogs.forEach(l => items.push({ kind: l.status==='missed'?'missed':'med', date:l.date, time:l.timeTaken||'00:00', type:l.medName+(l.dose?' '+l.dose:''), desc:l.note, category:l.category }));
+  items.sort((a,b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return b.time.localeCompare(a.time);
+  });
+
+  if (!items.length) return `<div class="section"><div class="section-title">Timeline</div><div class="no-data">No data in selected range</div></div>`;
+
+  // Limit to 50 items, collapsible
+  const show = items.slice(0, 50);
+  let lastDate = '';
+  let rows = '';
+  show.forEach(item => {
+    if (item.date !== lastDate) {
+      lastDate = item.date;
+      rows += `<div class="tl-date">${fmtDate(item.date)}</div>`;
+    }
+    const timeStr = item.time ? fmtTime(item.time) : '';
+    if (item.kind === 'symptom') {
+      rows += `<div class="tl-item symptom">
+        <span style="font-size:11px;color:var(--muted)">${timeStr}</span>
+        <span class="tl-type">${esc(item.type)}</span>
+        <span class="tl-sev" style="background:${sevColor(item.severity)}">${item.severity}/10</span>
+        ${item.desc ? `<div class="tl-desc">${esc(item.desc)}</div>` : ''}
+      </div>`;
+    } else {
+      const icon = item.kind === 'missed' ? 'Missed' : 'Taken';
+      const catLabel = item.category === 'as-needed' ? ' (PRN)' : item.category === 'one-off' ? ' (one-off)' : '';
+      rows += `<div class="tl-item ${item.kind}">
+        <span style="font-size:11px;color:var(--muted)">${timeStr}</span>
+        <span class="tl-type">${esc(item.type)}</span>
+        <span style="font-size:11px;color:${item.kind==='missed'?'var(--red)':'var(--green)'};font-weight:600"> ${icon}${catLabel}</span>
+        ${item.desc ? `<div class="tl-desc">${esc(item.desc)}</div>` : ''}
+      </div>`;
+    }
+  });
+
+  const moreCount = items.length - 50;
+  if (moreCount > 0) rows += `<div class="tl-item" style="color:var(--muted);font-style:italic">+ ${moreCount} more entries</div>`;
+
+  return `<div class="section">
+    <div class="collapsible-header open">
+      <div class="section-title" style="margin-bottom:0">Timeline (${items.length} events)</div>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="collapsible-body open">
+      <div class="timeline" style="margin-top:8px">${rows}</div>
+    </div>
+  </div>`;
+}
+
+// ========== SECTION: MED ADHERENCE ==========
+function renderMedAdherence(meds, medLogs, totalDays) {
+  const regular = meds.filter(m => m.schedule === 'regular');
+  if (!regular.length) return '';
+
+  // Build date list
+  const dates = [];
+  const d = new Date(dateFrom);
+  const end = new Date(dateTo);
+  while (d <= end) { dates.push(d.toISOString().split('T')[0]); d.setDate(d.getDate()+1) }
+
+  let cards = regular.map(med => {
+    let taken = 0, missed = 0;
+    const today = new Date().toISOString().split('T')[0];
+
+    let calCells = '';
+    // Day-of-week headers
+    const dayLabels = ['S','M','T','W','T','F','S'];
+    // Pad to start on correct day of week
+    const startDow = new Date(dateFrom).getDay();
+    for (let i = 0; i < 7; i++) calCells += `<div class="cal-header">${dayLabels[i]}</div>`;
+    for (let i = 0; i < startDow; i++) calCells += `<div class="cal-cell cal-empty"></div>`;
+
+    dates.forEach(date => {
+      const log = medLogs.find(l => l.medId === med.id && l.date === date && l.category === 'regular');
+      const isTaken = log && log.status === 'taken';
+      const isPast = date < today;
+      if (isTaken) { taken++; calCells += `<div class="cal-cell cal-taken">${parseInt(date.split('-')[2])}</div>` }
+      else if (isPast) { missed++; calCells += `<div class="cal-cell cal-missed">${parseInt(date.split('-')[2])}</div>` }
+      else { calCells += `<div class="cal-cell cal-empty">${parseInt(date.split('-')[2])}</div>` }
+    });
+
+    const pct = (taken + missed) > 0 ? Math.round(taken/(taken+missed)*100) : 0;
+
+    return `<div class="med-adherence-card">
+      <div class="med-adherence-name">${esc(med.name)} ${esc(med.dose)}</div>
+      <div class="med-adherence-bar-wrap">
+        <div class="med-adherence-bar" style="width:${pct}%;${pct<50?'background:linear-gradient(90deg,var(--red),var(--orange))':''}"></div>
+      </div>
+      <div class="med-adherence-stats">
+        <span>${pct}% adherence</span>
+        <span>${taken} taken / ${missed} missed</span>
+      </div>
+      <div class="cal-grid">${calCells}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="section">
+    <div class="collapsible-header open">
+      <div class="section-title" style="margin-bottom:0">Medication Adherence</div>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="collapsible-body open" style="margin-top:8px">${cards}</div>
+  </div>`;
+}
+
+// ========== SECTION: AS-NEEDED SUMMARY ==========
+function renderAsNeededSummary(medLogs) {
+  const asNeeded = medLogs.filter(l => l.category === 'as-needed' || l.category === 'one-off');
+  if (!asNeeded.length) return '';
+
+  // Group by med name
+  const groups = {};
+  asNeeded.forEach(l => {
+    const key = l.medName + (l.dose ? ' ' + l.dose : '');
+    if (!groups[key]) groups[key] = { count: 0, dates: [] };
+    groups[key].count++;
+    groups[key].dates.push(l.date);
+  });
+
+  let rows = Object.entries(groups).sort((a,b) => b[1].count - a[1].count).map(([name, data]) => {
+    const uniqueDays = new Set(data.dates).size;
+    return `<tr><td style="font-weight:600">${esc(name)}</td><td>${data.count}</td><td>${uniqueDays} days</td></tr>`;
+  }).join('');
+
+  return `<div class="section">
+    <div class="section-title">As-Needed / One-Off Medications</div>
+    <table class="asn-table">
+      <thead><tr><th>Medication</th><th>Times Taken</th><th>Spread</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ========== SECTION: DETAIL TABLE ==========
+function renderDetailTable(symptoms) {
+  if (!symptoms.length) return '';
+
+  let rows = symptoms.map(s => {
+    const time = s.startTime ? fmtTime(s.startTime) : '';
+    const endTime = s.endTime ? ' - ' + fmtTime(s.endTime) : (s.durationType === 'ongoing' ? ' - ongoing' : s.durationType === 'constant' ? 'constant' : '');
+    const headLocs = (s.headacheLocations && s.headacheLocations.length)
+      ? s.headacheLocations.map(l => l.replace(/_/g,' ')).join(', ')
+      : '';
+    return `<tr>
+      <td>${fmtDate(s.date)}</td>
+      <td>${time}${endTime}</td>
+      <td>${esc(s.type)}</td>
+      <td><span class="sev-dot" style="background:${sevColor(s.severity)}"></span>${s.severity}</td>
+      <td>${esc(s.description||'')}${headLocs ? '<br><span style="font-size:10px;color:var(--muted)">Location: '+esc(headLocs)+'</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="section">
+    <div class="collapsible-header">
+      <div class="section-title" style="margin-bottom:0">Full Symptom Log (${symptoms.length})</div>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="collapsible-body">
+      <div style="overflow-x:auto;margin-top:8px">
+        <table class="detail-table">
+          <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Sev</th><th>Notes</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ========== INIT ==========
+initDateRange(30);
+</script>
+</body>
+</html>

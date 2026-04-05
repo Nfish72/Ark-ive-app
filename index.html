@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0a1830">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Symptom Tracker</title>
+<style>
+/* ========== RESET & BASE ========== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,#0a1628 0%,#0f2040 15%,#132d55 30%,#0e2448 45%,#112a50 60%,#0d1f3e 75%,#0b1a35 90%,#091428 100%);
+  background-attachment:fixed;
+  color:#c8daf0;
+  position:relative;
+}
+body::before{
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 300px 200px at 20% 10%, rgba(20,60,120,0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 250px 150px at 80% 30%, rgba(30,70,140,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 200px at 50% 85%, rgba(15,50,100,0.25) 0%, transparent 70%),
+    radial-gradient(circle 80px at 15% 60%, rgba(20,80,160,0.15) 0%, transparent 70%),
+    radial-gradient(circle 60px at 85% 70%, rgba(20,80,160,0.12) 0%, transparent 70%);
+}
+
+/* ========== FRUTIGER AERO CHAOS BACKGROUND ========== */
+.bg-chaos{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+
+/* Real image goldfish */
+.goldfish{position:absolute;pointer-events:none;filter:drop-shadow(0 4px 12px rgba(200,100,0,0.15)) brightness(0.75)}
+.gf1{width:120px;left:3%;top:22%;animation:swim1 20s infinite ease-in-out;opacity:0.65}
+.gf2{width:160px;right:2%;top:50%;animation:swim2 26s infinite ease-in-out 3s;opacity:0.5;transform:scaleX(-1)}
+.gf3{width:100px;left:35%;top:72%;animation:swim3 17s infinite ease-in-out 7s;opacity:0.55}
+.gf4{width:80px;left:60%;top:8%;animation:swim1 22s infinite ease-in-out 5s;opacity:0.4;transform:scaleX(-1)}
+
+@keyframes swim1{
+  0%{transform:translate(0,0) rotate(0deg)}
+  25%{transform:translate(40px,-18px) rotate(-3deg)}
+  50%{transform:translate(85px,8px) rotate(2deg)}
+  75%{transform:translate(30px,12px) rotate(-2deg)}
+  100%{transform:translate(0,0) rotate(0deg)}
+}
+@keyframes swim2{
+  0%{transform:scaleX(-1) translate(0,0) rotate(0deg)}
+  30%{transform:scaleX(-1) translate(-55px,-22px) rotate(4deg)}
+  60%{transform:scaleX(-1) translate(-20px,18px) rotate(-3deg)}
+  100%{transform:scaleX(-1) translate(0,0) rotate(0deg)}
+}
+@keyframes swim3{
+  0%{transform:translate(0,0) rotate(1deg)}
+  50%{transform:translate(65px,-28px) rotate(-4deg)}
+  100%{transform:translate(0,0) rotate(1deg)}
+}
+
+/* Real image clouds */
+.cloud{position:absolute;pointer-events:none;filter:brightness(0.3) opacity(0.4)}
+.cl1{width:220px;left:-30px;top:1%;opacity:0.3;animation:cloudDrift 45s infinite ease-in-out}
+.cl2{width:180px;right:-20px;top:12%;opacity:0.25;animation:cloudDrift 55s infinite ease-in-out 12s}
+.cl3{width:150px;left:30%;top:6%;opacity:0.2;animation:cloudDrift 50s infinite ease-in-out 6s}
+@keyframes cloudDrift{
+  0%{transform:translateX(0)}
+  50%{transform:translateX(35px)}
+  100%{transform:translateX(0)}
+}
+
+
+/* Lens flares */
+.flare{position:absolute;pointer-events:none;border-radius:50%;
+  background:radial-gradient(circle,rgba(60,120,220,0.4),rgba(30,80,160,0.1),transparent)}
+.fl1{width:220px;height:220px;right:-70px;top:-50px;opacity:0.3;animation:flarePulse 8s infinite ease-in-out}
+.fl2{width:120px;height:120px;left:8%;top:38%;opacity:0.15;animation:flarePulse 11s infinite ease-in-out 3s}
+.fl3{width:80px;height:80px;left:55%;top:22%;opacity:0.18;animation:flarePulse 7s infinite ease-in-out 5s}
+
+/* Water droplets */
+.droplet{position:absolute;pointer-events:none}
+.dr1{width:22px;left:32%;top:16%;animation:drip 16s infinite ease-in-out 0s;opacity:0.4}
+.dr2{width:16px;left:74%;top:40%;animation:drip 13s infinite ease-in-out 3s;opacity:0.35}
+.dr3{width:19px;left:18%;top:60%;animation:drip 18s infinite ease-in-out 5s;opacity:0.3}
+
+/* Butterflies */
+.butterfly{position:absolute;pointer-events:none}
+.bf1{width:45px;left:75%;top:20%;animation:flutter1 12s infinite ease-in-out;opacity:0.5}
+.bf2{width:35px;left:15%;top:45%;animation:flutter2 16s infinite ease-in-out 4s;opacity:0.4}
+@keyframes flutter1{
+  0%{transform:translate(0,0) rotate(5deg)}
+  25%{transform:translate(-30px,-20px) rotate(-10deg)}
+  50%{transform:translate(-60px,10px) rotate(8deg)}
+  75%{transform:translate(-20px,-15px) rotate(-5deg)}
+  100%{transform:translate(0,0) rotate(5deg)}
+}
+@keyframes flutter2{
+  0%{transform:translate(0,0) rotate(-3deg)}
+  50%{transform:translate(50px,-30px) rotate(12deg)}
+  100%{transform:translate(0,0) rotate(-3deg)}
+}
+
+@keyframes drip{
+  0%,100%{transform:translateY(0);opacity:0.4}
+  50%{transform:translateY(-18px);opacity:0.2}
+}
+@keyframes flarePulse{
+  0%,100%{opacity:0.1;transform:scale(1)}
+  50%{opacity:0.25;transform:scale(1.12)}
+}
+
+/* Stars */
+.star{
+  position:absolute;pointer-events:none;
+  width:2px;height:2px;
+  background:#fff;
+  border-radius:50%;
+  animation:twinkle var(--dur,3s) infinite ease-in-out var(--delay,0s);
+}
+@keyframes twinkle{
+  0%,100%{opacity:0.2}
+  50%{opacity:0.8}
+}
+
+/* ========== GLASS EFFECTS ========== */
+.glass{
+  background:rgba(15,30,60,0.7);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(60,120,200,0.25);
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,10,30,0.4),inset 0 1px 0 rgba(80,140,220,0.15);
+}
+.glass-card{
+  background:rgba(15,30,60,0.6);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(60,120,200,0.2);
+  border-radius:12px;
+  box-shadow:0 2px 12px rgba(0,10,30,0.3),inset 0 1px 0 rgba(80,140,220,0.1);
+  position:relative;
+  overflow:hidden;
+}
+.glass-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  background:linear-gradient(180deg,rgba(60,120,200,0.08),transparent);
+  pointer-events:none;border-radius:12px 12px 0 0;
+}
+
+/* ========== GLOSSY BUTTONS ========== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:12px 24px;border:none;border-radius:10px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:transform 0.15s,box-shadow 0.15s;
+  min-height:44px;
+}
+.btn:active{transform:scale(0.97)}
+.btn-primary{
+  background:linear-gradient(180deg,#2080d0 0%,#1a6ab8 50%,#1558a0 100%);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(20,80,160,0.4),inset 0 1px 0 rgba(100,180,255,0.3);
+  text-shadow:0 1px 2px rgba(0,0,0,0.3);
+}
+.btn-secondary{
+  background:linear-gradient(180deg,#1a2e4a 0%,#152540 50%,#101e35 100%);
+  color:#a0c0e0;
+  box-shadow:0 2px 8px rgba(0,10,30,0.3),inset 0 1px 0 rgba(60,120,200,0.15);
+}
+.btn-danger{
+  background:linear-gradient(180deg,#d04040 0%,#b03030 50%,#902020 100%);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(160,0,0,0.3),inset 0 1px 0 rgba(255,100,100,0.2);
+  text-shadow:0 1px 2px rgba(0,0,0,0.3);
+}
+.btn-small{padding:8px 16px;font-size:13px;border-radius:8px}
+
+/* ========== APP LAYOUT ========== */
+#app{
+  position:relative;z-index:1;
+  height:100%;display:flex;flex-direction:column;
+  max-width:500px;margin:0 auto;
+}
+.screen{
+  display:none;flex:1;overflow-y:auto;
+  padding:16px 16px 8px;
+  -webkit-overflow-scrolling:touch;
+}
+.screen.active{display:flex;flex-direction:column}
+.screen-title{
+  font-size:22px;font-weight:700;
+  color:#e0ecff;
+  text-shadow:0 1px 3px rgba(0,20,60,0.4);
+  margin-bottom:12px;padding:4px 0;
+}
+
+/* ========== PASSWORD SCREEN ========== */
+#password-screen{
+  align-items:center;justify-content:center;
+  flex:1;padding:24px;
+}
+#password-screen.active{display:flex}
+#password-screen .lock-box{
+  text-align:center;width:100%;max-width:300px;padding:32px 24px;
+}
+#password-screen h1{
+  font-size:26px;font-weight:700;
+  color:#e0ecff;
+  text-shadow:0 2px 4px rgba(0,20,60,0.4);
+  margin-bottom:8px;
+}
+#password-screen .subtitle{
+  font-size:13px;color:#7a9cc0;margin-bottom:24px;
+}
+#password-screen input{
+  width:100%;padding:14px;border-radius:10px;
+  border:1px solid rgba(60,120,200,0.3);
+  background:rgba(15,30,60,0.6);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  font-size:16px;text-align:center;color:#c8daf0;
+  box-shadow:inset 0 2px 4px rgba(0,10,30,0.2);
+  margin-bottom:16px;outline:none;
+}
+#password-screen input:focus{
+  border-color:#2080d0;
+  box-shadow:inset 0 2px 4px rgba(0,10,30,0.2),0 0 0 3px rgba(30,100,200,0.25);
+}
+.password-error{color:#ff6060;font-size:13px;margin-top:-8px;margin-bottom:12px;display:none}
+
+/* ========== NAV BAR ========== */
+.nav-bar-wrap{
+  display:none;position:relative;z-index:12;
+}
+.nav-bar-wrap.visible{display:block}
+.nav-bar{
+  display:flex;
+  background:linear-gradient(180deg, #0a1830 0%, #061020 100%);
+  padding:10px 0 env(safe-area-inset-bottom,10px);
+  position:relative;
+  box-shadow:0 -3px 16px rgba(0,10,30,0.5);
+  border-top:1px solid rgba(60,120,200,0.15);
+}
+.nav-bar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:none;cursor:pointer;
+  padding:6px 4px;color:rgba(140,180,230,0.7);font-size:10px;font-weight:700;
+  transition:color 0.2s;text-shadow:0 1px 3px rgba(0,10,30,0.5);
+  position:relative;z-index:2;
+}
+.nav-bar button.active{color:#60b0ff;text-shadow:0 0 8px rgba(60,140,255,0.5),0 1px 3px rgba(0,10,30,0.5)}
+.nav-bar button.active .nav-icon{filter:drop-shadow(0 0 4px rgba(60,140,255,0.5))}
+.nav-bar button svg,.nav-bar button .nav-icon{width:26px;height:26px}
+
+/* ========== FORM ELEMENTS ========== */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#8aaccf}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:12px;border-radius:10px;
+  border:1px solid rgba(60,120,200,0.3);
+  background:rgba(15,30,60,0.6);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  font-size:16px;color:#c8daf0;
+  box-shadow:inset 0 2px 4px rgba(0,10,30,0.2);
+  outline:none;font-family:inherit;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:#2080d0;
+  box-shadow:inset 0 2px 4px rgba(0,10,30,0.2),0 0 0 3px rgba(30,100,200,0.25);
+}
+.form-textarea{resize:vertical;min-height:70px}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238aaccf' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+/* ========== DURATION TOGGLE ========== */
+.toggle-group{display:flex;gap:6px;flex-wrap:wrap}
+.toggle-btn{
+  padding:8px 14px;border-radius:8px;border:1px solid rgba(60,120,200,0.3);
+  background:rgba(15,30,60,0.5);font-size:13px;font-weight:600;
+  color:#8aaccf;cursor:pointer;transition:all 0.2s;
+}
+.toggle-btn.active{
+  background:linear-gradient(180deg,#2080d0,#1a6ab8);
+  color:#fff;border-color:#1a6ab8;
+  box-shadow:0 2px 6px rgba(20,80,160,0.35);
+}
+
+/* ========== SEVERITY SLIDER ========== */
+.severity-container{padding:4px 0}
+.severity-track{position:relative;height:32px;display:flex;align-items:center}
+.severity-input{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:8px;border-radius:4px;outline:none;
+  background:linear-gradient(90deg,#66CC88 0%,#f0c040 50%,#e04040 100%);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.15);
+}
+.severity-input::-webkit-slider-thumb{
+  -webkit-appearance:none;width:28px;height:28px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#c0d8f0,#1a3a60);
+  border:2px solid #2080d0;
+  box-shadow:0 2px 6px rgba(20,80,160,0.4);
+  cursor:pointer;
+}
+.severity-labels{display:flex;justify-content:space-between;font-size:12px;color:#7a9cc0;margin-top:4px}
+.severity-value{
+  text-align:center;font-size:20px;font-weight:700;margin-top:4px;
+}
+
+/* ========== SYMPTOM CARDS ========== */
+.symptom-card{
+  padding:14px;margin-bottom:10px;cursor:pointer;
+  transition:transform 0.15s;
+}
+.symptom-card:active{transform:scale(0.98)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.card-type{font-size:16px;font-weight:700;color:#e0ecff}
+.card-severity{
+  font-size:13px;font-weight:700;padding:3px 8px;border-radius:6px;
+  color:#fff;text-shadow:0 1px 1px rgba(0,0,0,0.3);
+}
+.card-time{font-size:13px;color:#7a9cc0;margin-bottom:4px}
+.card-desc{font-size:13px;color:#8aaccf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-ongoing{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:700;color:#60b0ff;
+  background:rgba(30,100,200,0.15);padding:2px 8px;border-radius:4px;
+}
+.card-ongoing::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:#60b0ff;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.mark-ended-btn{
+  font-size:12px;color:#60b0ff;background:rgba(30,100,200,0.15);
+  border:1px solid rgba(60,120,200,0.3);border-radius:6px;
+  padding:4px 10px;cursor:pointer;margin-top:6px;
+}
+.empty-state{text-align:center;padding:40px 20px;color:#5a7a98;font-size:14px}
+
+/* ========== HEADACHE MAP ========== */
+.head-map{padding:14px;margin-bottom:14px}
+.head-map-title{font-size:14px;font-weight:700;color:#a0c8e8;margin-bottom:12px;text-align:center}
+.head-map-hint{font-size:12px;color:#7a9cc0;text-align:center;margin-top:10px;font-weight:500}
+#brain-picker{position:relative;max-width:320px;margin:0 auto}
+#brain-picker img{width:100%;height:auto;display:block}
+#brain-picker svg{position:absolute;top:0;left:0;width:100%;height:100%}
+.brain-zone-pick{cursor:pointer;transition:fill 0.15s,stroke 0.15s;fill:transparent;stroke:transparent;stroke-width:0}
+.brain-zone-pick.selected{stroke-width:1.5}
+.brain-zone-label{pointer-events:none;font-family:Arial,sans-serif;font-weight:600;fill:rgba(140,180,220,0.5);font-size:13px;text-anchor:middle}
+.brain-zone-pick.selected+.brain-zone-label{fill:rgba(255,255,255,0.95)}
+
+/* Mini brain for log cards */
+.mini-brain{display:inline-block;position:relative;vertical-align:middle;margin-top:4px}
+.mini-brain img{display:block}
+.mini-brain svg{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* ========== MEDS TAB ========== */
+.med-date-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.med-date-nav button{background:none;border:none;color:#60b0ff;font-size:14px;font-weight:600;cursor:pointer;padding:8px}
+.med-date-nav .current-date{font-size:15px;font-weight:700}
+.med-section-title{font-size:13px;font-weight:700;color:#7a9cc0;margin:12px 0 8px;text-transform:uppercase;letter-spacing:0.5px}
+.med-item{
+  display:flex;align-items:center;padding:12px;margin-bottom:8px;
+  cursor:pointer;transition:transform 0.15s;
+}
+.med-item:active{transform:scale(0.98)}
+.med-check{
+  width:28px;height:28px;border-radius:8px;
+  border:2px solid rgba(60,120,200,0.4);
+  background:rgba(15,30,60,0.6);
+  display:flex;align-items:center;justify-content:center;
+  margin-right:12px;flex-shrink:0;
+  transition:all 0.2s;
+}
+.med-check.checked{
+  background:linear-gradient(180deg,#66CC88,#44aa66);
+  border-color:#44aa66;
+}
+.med-check.checked::after{content:'\2713';color:#fff;font-size:16px;font-weight:700}
+.med-check.missed{
+  background:linear-gradient(180deg,#ff7070,#e04040);
+  border-color:#c03030;
+}
+.med-check.missed::after{content:'\2717';color:#fff;font-size:14px;font-weight:700}
+.med-info{flex:1}
+.med-name{font-size:15px;font-weight:600}
+.med-detail{font-size:12px;color:#7a9cc0}
+.med-time-badge{font-size:12px;color:#60b0ff;font-weight:600}
+
+/* ========== SEARCH ========== */
+.search-tabs{display:flex;gap:6px;margin-bottom:12px}
+.search-tab{
+  flex:1;padding:8px;text-align:center;border-radius:8px;
+  border:1px solid rgba(60,120,200,0.3);background:rgba(15,30,60,0.5);
+  font-size:13px;font-weight:600;color:#8aaccf;cursor:pointer;
+}
+.search-tab.active{background:linear-gradient(180deg,#2080d0,#1a6ab8);color:#fff;border-color:#1a6ab8}
+
+/* ========== SETTINGS ========== */
+.settings-section{margin-bottom:20px}
+.settings-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#7a9cc0;margin-bottom:8px}
+.settings-list{padding:0;list-style:none}
+.settings-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px;border-bottom:1px solid rgba(60,120,200,0.1);
+}
+.settings-item:last-child{border-bottom:none}
+.settings-item-text{flex:1;font-size:14px}
+.settings-item-sub{font-size:12px;color:#7a9cc0}
+.settings-actions{display:flex;gap:6px}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;
+  background:rgba(15,30,60,0.5);color:#7a9cc0;
+}
+.icon-btn:active{transform:scale(0.9)}
+.icon-btn.danger{color:#ff6060}
+
+/* ========== EXPANDED VIEW ========== */
+#expanded-view{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20;display:none;flex-direction:column;max-width:500px;margin:0 auto}
+#expanded-view.active{display:flex}
+#expanded-view .expanded-bg{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#0f2040 0%,#0b1a35 50%,#091428 100%);
+}
+#expanded-view .expanded-content{
+  position:relative;z-index:1;flex:1;overflow-y:auto;padding:16px;
+  -webkit-overflow-scrolling:touch;
+}
+.back-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  background:none;border:none;color:#60b0ff;font-size:15px;font-weight:600;
+  cursor:pointer;padding:8px 0;margin-bottom:12px;
+}
+
+/* ========== MODAL ========== */
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:30;
+  background:rgba(0,10,25,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+.modal-overlay.active{display:flex}
+.modal{width:100%;max-width:340px;padding:24px;text-align:center}
+.modal h3{margin-bottom:12px;font-size:18px}
+.modal .form-group{text-align:left}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:center}
+
+/* ========== UTILITIES ========== */
+.hidden{display:none!important}
+.severity-1,.severity-2,.severity-3{background:linear-gradient(180deg,#5ab86a,#3d9050)}
+.severity-4,.severity-5,.severity-6{background:linear-gradient(180deg,#d4a820,#b08a18)}
+.severity-7,.severity-8{background:linear-gradient(180deg,#d07020,#a85818)}
+.severity-9,.severity-10{background:linear-gradient(180deg,#d04040,#a02828)}
+.sync-indicator{
+  position:fixed;top:8px;right:12px;z-index:10;
+  width:10px;height:10px;border-radius:50%;
+  transition:background 0.3s;
+}
+.sync-indicator.synced{background:#5ab86a}
+.sync-indicator.syncing{background:#d4a820;animation:pulse 1s infinite}
+.sync-indicator.error{background:#d04040}
+.sync-indicator.offline{background:#7a9cc0}
+.gap-8{gap:8px}.mt-8{margin-top:8px}.mb-8{margin-bottom:8px}
+.flex{display:flex}.flex-1{flex:1}.items-center{align-items:center}.justify-between{justify-content:space-between}
+</style>
+</head>
+<body>
+
+<div class="bg-chaos">
+  <!-- Real photo clouds -->
+  <img class="cloud cl1" src="cloud1.png" alt="">
+  <img class="cloud cl2" src="cloud2.png" alt="">
+  <img class="cloud cl3" src="cloud1.png" alt="">
+
+  <!-- Goldfish -->
+  <img class="goldfish gf1" src="fish1.png" alt="">
+  <img class="goldfish gf2" src="fish2.png" alt="">
+  <img class="goldfish gf3" src="fish3.png" alt="">
+  <img class="goldfish gf4" src="fish1.png" alt="">
+
+  <!-- SVG butterflies (these look good as vectors) -->
+  <svg class="butterfly bf1" viewBox="0 0 60 50">
+    <g transform="translate(30,25)">
+      <g><animateTransform attributeName="transform" type="rotate" values="-15,0,0;15,0,0;-15,0,0" dur="0.6s" repeatCount="indefinite"/>
+        <path d="M0,0 Q-20,-25 -8,-30 Q0,-20 0,0Z" fill="rgba(40,100,200,0.6)"/>
+        <path d="M0,0 Q-18,-20 -6,-24 Q0,-16 0,0Z" fill="rgba(80,140,220,0.4)"/>
+        <path d="M0,0 Q-15,15 -6,22 Q0,12 0,0Z" fill="rgba(30,80,180,0.5)"/>
+      </g>
+      <g transform="scale(-1,1)"><animateTransform attributeName="transform" type="rotate" values="15,0,0;-15,0,0;15,0,0" dur="0.6s" repeatCount="indefinite"/>
+        <path d="M0,0 Q-20,-25 -8,-30 Q0,-20 0,0Z" fill="rgba(40,100,200,0.6)"/>
+        <path d="M0,0 Q-18,-20 -6,-24 Q0,-16 0,0Z" fill="rgba(80,140,220,0.4)"/>
+        <path d="M0,0 Q-15,15 -6,22 Q0,12 0,0Z" fill="rgba(30,80,180,0.5)"/>
+      </g>
+      <ellipse cx="0" cy="0" rx="1.5" ry="10" fill="#1a4080"/>
+    </g>
+  </svg>
+  <svg class="butterfly bf2" viewBox="0 0 60 50">
+    <g transform="translate(30,25)">
+      <g><animateTransform attributeName="transform" type="rotate" values="-12,0,0;12,0,0;-12,0,0" dur="0.5s" repeatCount="indefinite"/>
+        <path d="M0,0 Q-18,-22 -7,-26 Q0,-18 0,0Z" fill="rgba(60,150,80,0.5)"/>
+        <path d="M0,0 Q-15,-17 -5,-20 Q0,-13 0,0Z" fill="rgba(100,180,100,0.35)"/>
+        <path d="M0,0 Q-12,13 -5,18 Q0,10 0,0Z" fill="rgba(50,130,60,0.45)"/>
+      </g>
+      <g transform="scale(-1,1)"><animateTransform attributeName="transform" type="rotate" values="12,0,0;-12,0,0;12,0,0" dur="0.5s" repeatCount="indefinite"/>
+        <path d="M0,0 Q-18,-22 -7,-26 Q0,-18 0,0Z" fill="rgba(60,150,80,0.5)"/>
+        <path d="M0,0 Q-15,-17 -5,-20 Q0,-13 0,0Z" fill="rgba(100,180,100,0.35)"/>
+        <path d="M0,0 Q-12,13 -5,18 Q0,10 0,0Z" fill="rgba(50,130,60,0.45)"/>
+      </g>
+      <ellipse cx="0" cy="0" rx="1.2" ry="8" fill="#1a4018"/>
+    </g>
+  </svg>
+
+  <!-- SVG water droplets -->
+  <svg class="droplet dr1" viewBox="0 0 20 30"><defs><radialGradient id="drg" cx="40%" cy="35%" r="50%"><stop offset="0%" stop-color="rgba(100,160,240,0.5)"/><stop offset="50%" stop-color="rgba(40,100,200,0.3)"/><stop offset="100%" stop-color="rgba(20,60,140,0.2)"/></radialGradient></defs><path d="M10,2 Q4,12 4,18 Q4,26 10,28 Q16,26 16,18 Q16,12 10,2Z" fill="url(#drg)" stroke="rgba(60,120,200,0.3)" stroke-width="0.5"/></svg>
+  <svg class="droplet dr2" viewBox="0 0 20 30"><path d="M10,2 Q4,12 4,18 Q4,26 10,28 Q16,26 16,18 Q16,12 10,2Z" fill="url(#drg)" stroke="rgba(60,120,200,0.3)" stroke-width="0.5"/></svg>
+  <svg class="droplet dr3" viewBox="0 0 20 30"><path d="M10,2 Q4,12 4,18 Q4,26 10,28 Q16,26 16,18 Q16,12 10,2Z" fill="url(#drg)" stroke="rgba(60,120,200,0.3)" stroke-width="0.5"/></svg>
+
+  <!-- Lens flares -->
+  <div class="flare fl1"></div><div class="flare fl2"></div><div class="flare fl3"></div>
+
+  <!-- Stars -->
+  <div class="star" style="left:5%;top:3%;--dur:2.5s;--delay:0s;opacity:0.6"></div>
+  <div class="star" style="left:12%;top:8%;--dur:4s;--delay:1s;opacity:0.4"></div>
+  <div class="star" style="left:25%;top:2%;--dur:3s;--delay:0.5s;opacity:0.5"></div>
+  <div class="star" style="left:40%;top:5%;--dur:3.5s;--delay:2s;opacity:0.3"></div>
+  <div class="star" style="left:55%;top:1%;--dur:2s;--delay:0.8s;opacity:0.5"></div>
+  <div class="star" style="left:68%;top:7%;--dur:4.5s;--delay:1.5s;opacity:0.4"></div>
+  <div class="star" style="left:78%;top:3%;--dur:2.8s;--delay:0.3s;opacity:0.6"></div>
+  <div class="star" style="left:88%;top:9%;--dur:3.2s;--delay:2.5s;opacity:0.3"></div>
+  <div class="star" style="left:92%;top:4%;--dur:2.2s;--delay:1.2s;opacity:0.5"></div>
+  <div class="star" style="left:35%;top:12%;--dur:3.8s;--delay:0.7s;opacity:0.35"></div>
+  <div class="star" style="left:50%;top:15%;--dur:2.6s;--delay:1.8s;opacity:0.45"></div>
+  <div class="star" style="left:82%;top:14%;--dur:3.4s;--delay:0.4s;opacity:0.4"></div>
+</div>
+
+<!-- Full-width grass across the bottom -->
+
+<div id="app">
+<div class="sync-indicator offline" id="sync-indicator" title="Sync status"></div>
+
+  <!-- PASSWORD SCREEN -->
+  <div id="password-screen" class="screen active">
+    <div class="lock-box glass">
+      <div style="font-size:48px;margin-bottom:12px">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <defs>
+            <linearGradient id="lock-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2080d0"/>
+              <stop offset="100%" stop-color="#1558a0"/>
+            </linearGradient>
+          </defs>
+          <rect x="8" y="20" width="32" height="24" rx="4" fill="url(#lock-grad)"/>
+          <rect x="10" y="22" width="28" height="6" rx="2" fill="rgba(255,255,255,0.25)"/>
+          <path d="M16 20V14a8 8 0 0 1 16 0v6" stroke="url(#lock-grad)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="24" cy="34" r="3" fill="#fff"/>
+          <rect x="23" y="34" width="2" height="5" rx="1" fill="#fff"/>
+        </svg>
+      </div>
+      <h1>Symptom Tracker</h1>
+      <p class="subtitle" id="password-subtitle">Create a 4-digit PIN to get started</p>
+      <input type="password" id="password-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4-digit PIN" autocomplete="off">
+      <input type="password" id="password-confirm" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Confirm PIN" autocomplete="off">
+      <p class="password-error" id="password-error"></p>
+      <button class="btn btn-primary" style="width:100%" id="password-submit">UNLOCK</button>
+    </div>
+  </div>
+
+  <!-- SYMPTOM LOG -->
+  <div id="log-screen" class="screen">
+    <div class="screen-title">Symptom Log</div>
+    <div id="symptom-list"></div>
+  </div>
+
+  <!-- MEDS -->
+  <div id="meds-screen" class="screen">
+    <div class="screen-title">Medications</div>
+    <div class="med-date-nav">
+      <button id="med-prev-day">&larr;</button>
+      <span class="current-date" id="med-current-date"></span>
+      <button id="med-next-day">&rarr;</button>
+    </div>
+    <div id="meds-regular-section">
+      <div class="med-section-title">Today's Meds</div>
+      <div id="meds-regular-list"></div>
+    </div>
+    <div id="meds-asneeded-section">
+      <div class="med-section-title">As-Needed</div>
+      <button class="btn btn-secondary btn-small" style="width:100%;margin-bottom:8px" id="log-asneeded-btn">+ Log As-Needed Med</button>
+      <div id="meds-asneeded-log"></div>
+    </div>
+    <div id="meds-oneoff-section">
+      <div class="med-section-title">One-Off</div>
+      <button class="btn btn-secondary btn-small" style="width:100%;margin-bottom:8px" id="log-oneoff-btn">+ Log One-Off Med</button>
+      <div id="meds-oneoff-log"></div>
+    </div>
+  </div>
+
+  <!-- ADD SYMPTOM -->
+  <div id="add-screen" class="screen">
+    <div class="screen-title" id="add-screen-title">Add Symptom</div>
+    <div class="glass" style="padding:16px;flex:1">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="symptom-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duration</label>
+        <div class="toggle-group" id="duration-toggle">
+          <button class="toggle-btn active" data-val="single">Single</button>
+          <button class="toggle-btn" data-val="range">Range</button>
+          <button class="toggle-btn" data-val="ongoing">Ongoing</button>
+          <button class="toggle-btn" data-val="constant">Constant</button>
+        </div>
+      </div>
+      <div class="form-group" id="start-time-group">
+        <label class="form-label">Start Time</label>
+        <input type="time" class="form-input" id="symptom-start-time">
+      </div>
+      <div class="form-group hidden" id="end-time-group">
+        <label class="form-label">End Time</label>
+        <input type="time" class="form-input" id="symptom-end-time">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="symptom-type">
+          <option value="">Select type...</option>
+        </select>
+      </div>
+
+      <!-- Headache Location Map -->
+      <div class="head-map glass-card hidden" id="headache-map">
+        <div class="head-map-title">Where does it hurt?</div>
+        <div id="brain-picker" style="position:relative;max-width:320px;margin:0 auto"></div>
+        <div class="head-map-hint">Tap regions to mark pain location</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Severity</label>
+        <div class="severity-container">
+          <input type="range" class="severity-input" id="symptom-severity" min="1" max="10" value="5">
+          <div class="severity-labels"><span>1</span><span>5</span><span>10</span></div>
+          <div class="severity-value" id="severity-display">5</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="symptom-desc" placeholder="Describe your symptoms..."></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%" id="save-symptom">SAVE SYMPTOM</button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div id="search-screen" class="screen">
+    <div class="screen-title">Search</div>
+    <div class="search-tabs">
+      <button class="search-tab active" data-tab="symptoms">Symptoms</button>
+      <button class="search-tab" data-tab="meds">Medications</button>
+    </div>
+    <div class="glass" style="padding:14px;margin-bottom:12px">
+      <div class="form-group">
+        <input type="text" class="form-input" id="search-text" placeholder="Search...">
+      </div>
+      <div class="form-group" id="search-type-group">
+        <select class="form-select" id="search-type-filter">
+          <option value="">All types</option>
+        </select>
+      </div>
+      <div class="flex gap-8">
+        <div class="form-group flex-1">
+          <label class="form-label">From</label>
+          <input type="date" class="form-input" id="search-from">
+        </div>
+        <div class="form-group flex-1">
+          <label class="form-label">To</label>
+          <input type="date" class="form-input" id="search-to">
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-small" id="clear-search">Clear Filters</button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings-screen" class="screen">
+    <div class="screen-title">Settings</div>
+
+    <div class="settings-section">
+      <button class="btn btn-primary" style="width:100%;padding:14px;font-size:16px" onclick="window.location.href='doctor.html'">Doctor Mode</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Password</div>
+      <div class="glass-card" style="padding:4px 0">
+        <div class="settings-item">
+          <span class="settings-item-text">Change Password</span>
+          <button class="btn btn-secondary btn-small" id="change-password-btn">Change</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Symptom Types</div>
+      <div class="glass-card" style="padding:4px 0">
+        <div id="symptom-types-list" class="settings-list"></div>
+        <div class="settings-item">
+          <button class="btn btn-secondary btn-small" style="width:100%" id="add-type-btn">+ Add New Type</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Medications</div>
+      <div class="glass-card" style="padding:4px 0">
+        <div id="settings-meds-regular" class="settings-list"></div>
+        <div id="settings-meds-asneeded" class="settings-list"></div>
+        <div class="settings-item">
+          <button class="btn btn-secondary btn-small" style="width:100%" id="add-med-btn">+ Add Medication</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Cloud Sync (GitHub)</div>
+      <div class="glass-card" style="padding:4px 0">
+        <div class="settings-item" id="sync-setup-row">
+          <span class="settings-item-text" id="sync-status-text">Not connected</span>
+          <button class="btn btn-secondary btn-small" id="sync-setup-btn">Connect</button>
+        </div>
+        <div class="settings-item" id="sync-actions-row" style="display:none">
+          <span class="settings-item-text settings-item-sub" id="sync-last-date">Never synced</span>
+          <div class="settings-actions">
+            <button class="btn btn-secondary btn-small" id="sync-now-btn">Sync Now</button>
+          </div>
+        </div>
+        <div class="settings-item" id="sync-disconnect-row" style="display:none">
+          <span class="settings-item-text">Disconnect GitHub</span>
+          <button class="btn btn-danger btn-small" id="sync-disconnect-btn">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Backup</div>
+      <div class="glass-card" style="padding:4px 0">
+        <div class="settings-item">
+          <span class="settings-item-text">Download Backup</span>
+          <button class="btn btn-secondary btn-small" id="download-backup-btn">Download</button>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-text">Restore from Backup</span>
+          <button class="btn btn-secondary btn-small" id="restore-backup-btn">Restore</button>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-text settings-item-sub" id="last-backup-date">No backups yet</span>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="restore-file-input" accept=".json" style="display:none">
+  </div>
+
+  <!-- NAV BAR: water + grass + glossy icons -->
+  <div class="nav-bar-wrap" id="nav-bar-wrap">
+  <nav class="nav-bar" id="nav-bar">
+    <button data-screen="log" class="active">
+      <svg class="nav-icon" viewBox="0 0 32 32"><defs><linearGradient id="ng1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7dd4f8"/><stop offset="50%" stop-color="#28a8e0"/><stop offset="100%" stop-color="#1878b0"/></linearGradient></defs><rect x="6" y="4" width="20" height="24" rx="3" fill="url(#ng1)"/><rect x="7" y="5" width="18" height="8" rx="2" fill="rgba(255,255,255,0.3)"/><rect x="10" y="14" width="12" height="2" rx="1" fill="rgba(255,255,255,0.8)"/><rect x="10" y="18" width="10" height="2" rx="1" fill="rgba(255,255,255,0.6)"/><rect x="10" y="22" width="8" height="2" rx="1" fill="rgba(255,255,255,0.4)"/></svg>
+      Log
+    </button>
+    <button data-screen="meds">
+      <svg class="nav-icon" viewBox="0 0 32 32"><defs><linearGradient id="ng2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#80e0a0"/><stop offset="50%" stop-color="#40b870"/><stop offset="100%" stop-color="#208848"/></linearGradient><linearGradient id="ng2b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0f8ff"/><stop offset="100%" stop-color="#c0e8d0"/></linearGradient></defs><rect x="8" y="2" width="16" height="28" rx="4" fill="url(#ng2)"/><rect x="9" y="3" width="14" height="10" rx="3" fill="rgba(255,255,255,0.3)"/><line x1="16" y1="15" x2="16" y2="23" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="19" x2="20" y2="19" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" stroke-linecap="round"/></svg>
+      Meds
+    </button>
+    <button data-screen="add">
+      <svg class="nav-icon" viewBox="0 0 32 32"><defs><radialGradient id="ng3" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="#90e8ff"/><stop offset="50%" stop-color="#00AADD"/><stop offset="100%" stop-color="#0070a0"/></radialGradient></defs><circle cx="16" cy="16" r="14" fill="url(#ng3)"/><ellipse cx="16" cy="10" rx="10" ry="5" fill="rgba(255,255,255,0.25)"/><line x1="16" y1="9" x2="16" y2="23" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="9" y1="16" x2="23" y2="16" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+      Add
+    </button>
+    <button data-screen="search">
+      <svg class="nav-icon" viewBox="0 0 32 32"><defs><radialGradient id="ng4" cx="40%" cy="35%" r="55%"><stop offset="0%" stop-color="#b0e8ff"/><stop offset="50%" stop-color="#50b8e0"/><stop offset="100%" stop-color="#2080b0"/></radialGradient></defs><circle cx="13" cy="13" r="9" fill="url(#ng4)" stroke="#1878a8" stroke-width="1.5"/><ellipse cx="13" cy="9" rx="6" ry="3" fill="rgba(255,255,255,0.3)"/><line x1="20" y1="20" x2="28" y2="28" stroke="#1878a8" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="27" y2="27" stroke="url(#ng4)" stroke-width="2" stroke-linecap="round"/></svg>
+      Search
+    </button>
+    <button data-screen="settings">
+      <svg class="nav-icon" viewBox="0 0 32 32"><defs><linearGradient id="ng5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c0d8e8"/><stop offset="50%" stop-color="#80a8c8"/><stop offset="100%" stop-color="#507898"/></linearGradient></defs><circle cx="16" cy="16" r="6" fill="url(#ng5)" stroke="#406080" stroke-width="1"/><ellipse cx="16" cy="13" rx="4" ry="2" fill="rgba(255,255,255,0.3)"/><g stroke="url(#ng5)" stroke-width="3.5" stroke-linecap="round"><line x1="16" y1="2" x2="16" y2="8"/><line x1="16" y1="24" x2="16" y2="30"/><line x1="2" y1="16" x2="8" y2="16"/><line x1="24" y1="16" x2="30" y2="16"/><line x1="5.9" y1="5.9" x2="9.9" y2="9.9"/><line x1="22.1" y1="22.1" x2="26.1" y2="26.1"/><line x1="5.9" y1="26.1" x2="9.9" y2="22.1"/><line x1="22.1" y1="9.9" x2="26.1" y2="5.9"/></g></svg>
+      Settings
+    </button>
+  </nav>
+  </div>
+</div>
+
+<!-- EXPANDED VIEW OVERLAY -->
+<div id="expanded-view">
+  <div class="expanded-bg"></div>
+  <div class="expanded-content" id="expanded-content"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal glass" id="modal-content"></div>
+</div>
+
+<script>
+// ========== DATA LAYER ==========
+const DB = {
+  get(key, fallback) { try { return JSON.parse(localStorage.getItem('st_' + key)) || fallback } catch { return fallback } },
+  set(key, val) { localStorage.setItem('st_' + key, JSON.stringify(val)); GistSync.queueSync(); },
+  remove(key) { localStorage.removeItem('st_' + key) }
+};
+
+const DEFAULT_TYPES = ['Headache','Nausea','Fatigue','Pain','Dizziness','Anxiety','Insomnia','Digestive','Other'];
+
+function getSymptomTypes() { return DB.get('types', DEFAULT_TYPES) }
+function setSymptomTypes(t) { DB.set('types', t) }
+function getSymptoms() { return DB.get('symptoms', []) }
+function setSymptoms(s) { DB.set('symptoms', s) }
+function getMeds() { return DB.get('medications', []) }
+function setMeds(m) { DB.set('medications', m) }
+function getMedLogs() { return DB.get('medLogs', []) }
+function setMedLogs(l) { DB.set('medLogs', l) }
+
+// ========== GITHUB GIST SYNC ==========
+const GistSync = {
+  _timer: null,
+  _debounceMs: 3000,
+
+  getToken() { return localStorage.getItem('gh_token') || null },
+  setToken(t) { localStorage.setItem('gh_token', t) },
+  removeToken() { localStorage.removeItem('gh_token') },
+
+  getGistId() { return localStorage.getItem('gh_gist_id') || null },
+  setGistId(id) { localStorage.setItem('gh_gist_id', id) },
+  removeGistId() { localStorage.removeItem('gh_gist_id') },
+
+  getLastSync() { return localStorage.getItem('gh_last_sync') || null },
+  setLastSync(ts) { localStorage.setItem('gh_last_sync', ts) },
+
+  isConnected() { return !!(this.getToken() && this.getGistId()) },
+
+  setIndicator(state) {
+    const el = document.getElementById('sync-indicator');
+    if (el) { el.className = 'sync-indicator ' + state; }
+  },
+
+  getAllData() {
+    return {
+      version: 1,
+      lastModified: new Date().toISOString(),
+      symptoms: getSymptoms(),
+      symptomTypes: getSymptomTypes(),
+      medications: getMeds(),
+      medLogs: getMedLogs(),
+      passwordHash: localStorage.getItem('st_passwordHash') || null
+    };
+  },
+
+  restoreData(data) {
+    if (data.symptoms) { localStorage.setItem('st_symptoms', JSON.stringify(data.symptoms)); }
+    if (data.symptomTypes) { localStorage.setItem('st_types', JSON.stringify(data.symptomTypes)); }
+    if (data.medications) { localStorage.setItem('st_medications', JSON.stringify(data.medications)); }
+    if (data.medLogs) { localStorage.setItem('st_medLogs', JSON.stringify(data.medLogs)); }
+    if (data.passwordHash) { localStorage.setItem('st_passwordHash', JSON.stringify(data.passwordHash)); }
+  },
+
+  queueSync() {
+    if (!this.isConnected()) return;
+    clearTimeout(this._timer);
+    this._timer = setTimeout(() => this.push(), this._debounceMs);
+  },
+
+  async push() {
+    if (!this.isConnected()) return;
+    this.setIndicator('syncing');
+    try {
+      const resp = await fetch('https://api.github.com/gists/' + this.getGistId(), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': 'Bearer ' + this.getToken(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          files: { 'symptom-tracker-data.json': { content: JSON.stringify(this.getAllData(), null, 2) } }
+        })
+      });
+      if (!resp.ok) throw new Error('Push failed: ' + resp.status);
+      this.setLastSync(new Date().toISOString());
+      this.setIndicator('synced');
+      this.updateUI();
+    } catch (e) {
+      console.error('Sync push error:', e);
+      this.setIndicator('error');
+    }
+  },
+
+  async pull() {
+    if (!this.isConnected()) return null;
+    this.setIndicator('syncing');
+    try {
+      const resp = await fetch('https://api.github.com/gists/' + this.getGistId(), {
+        headers: { 'Authorization': 'Bearer ' + this.getToken() }
+      });
+      if (!resp.ok) throw new Error('Pull failed: ' + resp.status);
+      const gist = await resp.json();
+      const file = gist.files['symptom-tracker-data.json'];
+      if (!file) throw new Error('No data file in gist');
+      const data = JSON.parse(file.content);
+      this.setIndicator('synced');
+      return data;
+    } catch (e) {
+      console.error('Sync pull error:', e);
+      this.setIndicator('error');
+      return null;
+    }
+  },
+
+  async createGist() {
+    this.setIndicator('syncing');
+    try {
+      const resp = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + this.getToken(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          description: 'Symptom Tracker Backup (auto-sync)',
+          public: false,
+          files: { 'symptom-tracker-data.json': { content: JSON.stringify(this.getAllData(), null, 2) } }
+        })
+      });
+      if (!resp.ok) throw new Error('Create gist failed: ' + resp.status);
+      const gist = await resp.json();
+      this.setGistId(gist.id);
+      this.setLastSync(new Date().toISOString());
+      this.setIndicator('synced');
+      return gist.id;
+    } catch (e) {
+      console.error('Create gist error:', e);
+      this.setIndicator('error');
+      return null;
+    }
+  },
+
+  async findExistingGist() {
+    try {
+      const resp = await fetch('https://api.github.com/gists?per_page=100', {
+        headers: { 'Authorization': 'Bearer ' + this.getToken() }
+      });
+      if (!resp.ok) return null;
+      const gists = await resp.json();
+      const match = gists.find(g => g.files['symptom-tracker-data.json']);
+      return match ? match.id : null;
+    } catch { return null }
+  },
+
+  async connect(token) {
+    this.setToken(token);
+    // Verify token
+    try {
+      const resp = await fetch('https://api.github.com/user', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!resp.ok) { this.removeToken(); return { ok: false, error: 'Invalid token' }; }
+    } catch { this.removeToken(); return { ok: false, error: 'Network error' }; }
+
+    // Check for existing gist
+    const existingId = await this.findExistingGist();
+    if (existingId) {
+      this.setGistId(existingId);
+      // Pull remote data and merge
+      const remoteData = await this.pull();
+      if (remoteData) {
+        const localSymptoms = getSymptoms();
+        const remoteSymptoms = remoteData.symptoms || [];
+        // If remote has data and local is empty, restore from remote
+        if (remoteSymptoms.length > 0 && localSymptoms.length === 0) {
+          this.restoreData(remoteData);
+        }
+        // If both have data, keep whichever was modified more recently
+        else if (remoteSymptoms.length > 0 && localSymptoms.length > 0) {
+          const remoteTime = new Date(remoteData.lastModified || 0).getTime();
+          const localBackup = localStorage.getItem('st_lastBackup');
+          const localTime = localBackup ? new Date(JSON.parse(localBackup)).getTime() : 0;
+          if (remoteTime > localTime) {
+            this.restoreData(remoteData);
+          } else {
+            await this.push();
+          }
+        }
+        // Local has data, remote empty — push local
+        else if (localSymptoms.length > 0) {
+          await this.push();
+        }
+      }
+      this.setLastSync(new Date().toISOString());
+      this.setIndicator('synced');
+      return { ok: true, restored: true };
+    }
+
+    // No existing gist — create one
+    const newId = await this.createGist();
+    if (!newId) return { ok: false, error: 'Failed to create backup' };
+    return { ok: true, restored: false };
+  },
+
+  disconnect() {
+    this.removeToken();
+    this.removeGistId();
+    localStorage.removeItem('gh_last_sync');
+    this.setIndicator('offline');
+    this.updateUI();
+  },
+
+  updateUI() {
+    const connected = this.isConnected();
+    const statusText = document.getElementById('sync-status-text');
+    const setupBtn = document.getElementById('sync-setup-btn');
+    const actionsRow = document.getElementById('sync-actions-row');
+    const disconnectRow = document.getElementById('sync-disconnect-row');
+    const lastDateEl = document.getElementById('sync-last-date');
+
+    if (connected) {
+      statusText.textContent = 'Connected to GitHub';
+      setupBtn.style.display = 'none';
+      actionsRow.style.display = 'flex';
+      disconnectRow.style.display = 'flex';
+      const last = this.getLastSync();
+      lastDateEl.textContent = last ? 'Last sync: ' + new Date(last).toLocaleString() : 'Never synced';
+      this.setIndicator('synced');
+    } else {
+      statusText.textContent = 'Not connected';
+      setupBtn.style.display = '';
+      actionsRow.style.display = 'none';
+      disconnectRow.style.display = 'none';
+      this.setIndicator('offline');
+    }
+  },
+
+  async initOnLoad() {
+    if (!this.isConnected()) { this.setIndicator('offline'); return; }
+    // Pull latest on app load
+    const remoteData = await this.pull();
+    if (remoteData) {
+      const remoteTime = new Date(remoteData.lastModified || 0).getTime();
+      const lastSync = this.getLastSync();
+      const localTime = lastSync ? new Date(lastSync).getTime() : 0;
+      if (remoteTime > localTime) {
+        this.restoreData(remoteData);
+      }
+    }
+    this.setLastSync(new Date().toISOString());
+    this.updateUI();
+  }
+};
+
+// ========== PASSWORD ==========
+async function hashPassword(pw) {
+  if (window.crypto && window.crypto.subtle) {
+    const enc = new TextEncoder().encode(pw);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  let h = 0x811c9dc5;
+  for (let i = 0; i < pw.length; i++) { h ^= pw.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+const passwordScreen = document.getElementById('password-screen');
+const passwordInput = document.getElementById('password-input');
+const passwordConfirm = document.getElementById('password-confirm');
+const passwordError = document.getElementById('password-error');
+const passwordSubtitle = document.getElementById('password-subtitle');
+const passwordSubmit = document.getElementById('password-submit');
+
+const hasPassword = !!DB.get('passwordHash', null);
+if (hasPassword) {
+  passwordConfirm.style.display = 'none';
+  passwordSubtitle.textContent = 'Enter your PIN';
+}
+
+passwordSubmit.addEventListener('click', async () => {
+  const pw = passwordInput.value;
+  if (!pw) { showPasswordError('Enter a PIN'); return }
+
+  if (!hasPassword) {
+    if (!/^\d{4}$/.test(pw)) { showPasswordError('Must be exactly 4 digits'); return }
+    if (pw !== passwordConfirm.value) { showPasswordError('PINs don\'t match'); return }
+    DB.set('passwordHash', await hashPassword(pw));
+    unlockApp();
+  } else {
+    const hash = await hashPassword(pw);
+    if (hash === DB.get('passwordHash')) { unlockApp() }
+    else { showPasswordError('Wrong password') }
+  }
+});
+
+passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') passwordSubmit.click() });
+passwordConfirm.addEventListener('keydown', e => { if (e.key === 'Enter') passwordSubmit.click() });
+
+function showPasswordError(msg) {
+  passwordError.textContent = msg;
+  passwordError.style.display = 'block';
+  passwordInput.style.borderColor = '#ff6060';
+}
+
+function unlockApp() {
+  passwordScreen.classList.remove('active');
+  document.getElementById('nav-bar-wrap').classList.add('visible');
+  navigateTo('log');
+  checkBackupReminder();
+  GistSync.initOnLoad();
+}
+
+// ========== NAVIGATION ==========
+let currentScreen = 'log';
+let editingSymptomId = null;
+
+document.querySelectorAll('.nav-bar button').forEach(btn => {
+  btn.addEventListener('click', () => navigateTo(btn.dataset.screen));
+});
+
+function navigateTo(screen) {
+  currentScreen = screen;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screen + '-screen').classList.add('active');
+  document.querySelectorAll('.nav-bar button').forEach(b => b.classList.toggle('active', b.dataset.screen === screen));
+
+  if (screen === 'log') renderSymptomLog();
+  if (screen === 'meds') renderMedsTab();
+  if (screen === 'add') resetAddForm();
+  if (screen === 'search') { populateSearchTypeFilter(); runSearch() }
+  if (screen === 'settings') renderSettings();
+}
+
+// ========== SYMPTOM LOG ==========
+function renderSymptomLog() {
+  const list = document.getElementById('symptom-list');
+  const symptoms = getSymptoms().sort((a, b) => {
+    const da = new Date(a.date + 'T' + (a.startTime || '23:59'));
+    const db = new Date(b.date + 'T' + (b.startTime || '23:59'));
+    return db - da;
+  });
+
+  if (!symptoms.length) {
+    list.innerHTML = '<div class="empty-state">No symptoms logged yet.<br>Tap + to add your first entry.</div>';
+    return;
+  }
+
+  list.innerHTML = symptoms.map(s => renderSymptomCard(s)).join('');
+}
+
+function renderSymptomCard(s) {
+  const sevClass = 'severity-' + s.severity;
+  const timeStr = formatDuration(s);
+  const desc = s.description ? `<div class="card-desc">${esc(s.description)}</div>` : '';
+  const ongoing = s.durationType === 'ongoing' && !s.endTime
+    ? `<div class="card-ongoing">ongoing</div>`
+    : '';
+  const markBtn = s.durationType === 'ongoing' && !s.endTime
+    ? `<button class="mark-ended-btn" onclick="event.stopPropagation();markEnded('${s.id}')">Mark as ended</button>`
+    : '';
+  const miniHead = s.type === 'Headache' && s.headacheLocations && s.headacheLocations.length
+    ? renderMiniHeadMap(s.headacheLocations, s.severity)
+    : '';
+
+  return `<div class="symptom-card glass-card" onclick="expandSymptom('${s.id}')">
+    <div class="card-header">
+      <span class="card-type">${esc(s.type)}</span>
+      <span class="card-severity ${sevClass}">${s.severity}/10</span>
+    </div>
+    <div class="card-time">${timeStr} ${ongoing}</div>
+    ${desc}${miniHead}${markBtn}
+  </div>`;
+}
+
+function formatDuration(s) {
+  const d = formatDate(s.date);
+  if (s.durationType === 'constant') return d + ' \u2014 Constant';
+  if (s.durationType === 'ongoing') {
+    if (s.endTime) return d + ', ' + fmtTime(s.startTime) + ' \u2014 ' + fmtTime(s.endTime);
+    return d + ', ' + fmtTime(s.startTime) + ' \u2014';
+  }
+  if (s.durationType === 'range') return d + ', ' + fmtTime(s.startTime) + ' \u2014 ' + fmtTime(s.endTime);
+  return d + ', ' + fmtTime(s.startTime);
+}
+
+function markEnded(id) {
+  const symptoms = getSymptoms();
+  const s = symptoms.find(x => x.id === id);
+  if (s) {
+    const now = new Date();
+    s.endTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    setSymptoms(symptoms);
+    renderSymptomLog();
+  }
+}
+
+// ========== EXPANDED VIEW ==========
+function expandSymptom(id) {
+  const s = getSymptoms().find(x => x.id === id);
+  if (!s) return;
+  const el = document.getElementById('expanded-view');
+  const content = document.getElementById('expanded-content');
+  const sevClass = 'severity-' + s.severity;
+  const bars = '\u2588'.repeat(s.severity) + '\u2591'.repeat(10 - s.severity);
+  const headMap = s.type === 'Headache' && s.headacheLocations && s.headacheLocations.length
+    ? `<div style="margin:12px 0"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Pain Location</div>${renderMiniHeadMap(s.headacheLocations, s.severity, true)}</div>`
+    : '';
+
+  content.innerHTML = `
+    <button class="back-btn" onclick="closeExpanded()">\u2190 Back</button>
+    <div class="glass" style="padding:20px">
+      <div style="font-size:22px;font-weight:700;margin-bottom:8px">${esc(s.type)}</div>
+      <div style="font-family:monospace;font-size:16px;letter-spacing:1px;margin-bottom:4px">${bars}</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:16px">Severity: ${s.severity} / 10</div>
+      <div style="font-size:14px;color:#5a7a90;margin-bottom:4px">Date: ${formatDate(s.date)}</div>
+      <div style="font-size:14px;color:#5a7a90;margin-bottom:16px">Time: ${formatDuration(s)}</div>
+      ${headMap}
+      ${s.description ? `<div style="font-size:15px;line-height:1.5;margin-bottom:20px">${esc(s.description)}</div>` : ''}
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary flex-1" onclick="editSymptom('${s.id}')">Edit</button>
+        <button class="btn btn-danger flex-1" onclick="deleteSymptom('${s.id}')">Delete</button>
+      </div>
+    </div>`;
+  el.classList.add('active');
+}
+
+function closeExpanded() { document.getElementById('expanded-view').classList.remove('active') }
+
+function editSymptom(id) {
+  closeExpanded();
+  editingSymptomId = id;
+  navigateTo('add');
+  const s = getSymptoms().find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('add-screen-title').textContent = 'Edit Symptom';
+  document.getElementById('symptom-date').value = s.date;
+  setDurationType(s.durationType);
+  if (s.startTime) document.getElementById('symptom-start-time').value = s.startTime;
+  if (s.endTime) document.getElementById('symptom-end-time').value = s.endTime;
+  document.getElementById('symptom-type').value = s.type;
+  handleTypeChange();
+  if (s.headacheLocations) selectedHeadRegions = [...s.headacheLocations];
+  updateHeadMapSelection();
+  document.getElementById('symptom-severity').value = s.severity;
+  document.getElementById('severity-display').textContent = s.severity;
+  updateSeverityColor(s.severity);
+  document.getElementById('symptom-desc').value = s.description || '';
+}
+
+function deleteSymptom(id) {
+  showModal('Delete Symptom', '<p>Are you sure?</p>', [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Delete', cls: 'btn-danger', action: () => {
+      setSymptoms(getSymptoms().filter(x => x.id !== id));
+      closeModal(); closeExpanded(); renderSymptomLog();
+    }}
+  ]);
+}
+
+// ========== ADD / EDIT SYMPTOM ==========
+let selectedDuration = 'single';
+let selectedHeadRegions = [];
+
+document.querySelectorAll('#duration-toggle .toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => setDurationType(btn.dataset.val));
+});
+
+function setDurationType(val) {
+  selectedDuration = val;
+  document.querySelectorAll('#duration-toggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  document.getElementById('start-time-group').classList.toggle('hidden', val === 'constant');
+  document.getElementById('end-time-group').classList.toggle('hidden', val !== 'range');
+}
+
+document.getElementById('symptom-severity').addEventListener('input', e => {
+  document.getElementById('severity-display').textContent = e.target.value;
+  updateSeverityColor(e.target.value);
+  updateHeadMapSelection();
+});
+
+function updateSeverityColor(val) {
+  const v = parseInt(val);
+  const display = document.getElementById('severity-display');
+  if (v <= 3) display.style.color = '#44aa55';
+  else if (v <= 6) display.style.color = '#c09820';
+  else if (v <= 8) display.style.color = '#d07020';
+  else display.style.color = '#c03030';
+}
+
+function resetAddForm() {
+  editingSymptomId = null;
+  document.getElementById('add-screen-title').textContent = 'Add Symptom';
+  const now = new Date();
+  document.getElementById('symptom-date').value = now.toISOString().split('T')[0];
+  document.getElementById('symptom-start-time').value = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('symptom-end-time').value = '';
+  setDurationType('single');
+  populateTypeSelector();
+  document.getElementById('symptom-type').value = '';
+  document.getElementById('headache-map').classList.add('hidden');
+  selectedHeadRegions = [];
+  document.getElementById('symptom-severity').value = 5;
+  document.getElementById('severity-display').textContent = '5';
+  updateSeverityColor(5);
+  document.getElementById('symptom-desc').value = '';
+}
+
+function populateTypeSelector() {
+  const sel = document.getElementById('symptom-type');
+  const types = getSymptomTypes();
+  sel.innerHTML = '<option value="">Select type...</option>' + types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+document.getElementById('symptom-type').addEventListener('change', handleTypeChange);
+
+function handleTypeChange() {
+  const val = document.getElementById('symptom-type').value;
+  const map = document.getElementById('headache-map');
+  if (val === 'Headache') {
+    map.classList.remove('hidden');
+    buildHeadMap();
+  } else {
+    map.classList.add('hidden');
+    selectedHeadRegions = [];
+  }
+}
+
+document.getElementById('save-symptom').addEventListener('click', () => {
+  const date = document.getElementById('symptom-date').value;
+  const type = document.getElementById('symptom-type').value;
+  if (!date || !type) { alert('Please fill in date and type'); return }
+
+  const startTime = selectedDuration !== 'constant' ? document.getElementById('symptom-start-time').value : null;
+  const endTime = selectedDuration === 'range' ? document.getElementById('symptom-end-time').value : null;
+  if (selectedDuration !== 'constant' && !startTime) { alert('Please set a time'); return }
+
+  const entry = {
+    id: editingSymptomId || Date.now().toString(),
+    date, durationType: selectedDuration,
+    startTime: startTime || null,
+    endTime: endTime || null,
+    type,
+    severity: parseInt(document.getElementById('symptom-severity').value),
+    description: document.getElementById('symptom-desc').value.trim(),
+    headacheLocations: type === 'Headache' ? [...selectedHeadRegions] : []
+  };
+
+  const symptoms = getSymptoms();
+  if (editingSymptomId) {
+    const idx = symptoms.findIndex(s => s.id === editingSymptomId);
+    if (idx >= 0) symptoms[idx] = entry;
+  } else {
+    symptoms.push(entry);
+  }
+  setSymptoms(symptoms);
+  navigateTo('log');
+});
+
+// ========== HEADACHE LOCATION MAP ==========
+// Brain zone paths for headache picker (traced from brain.png, 626x626)
+const BRAIN_ZONES = {
+  'L Frontal':  { d:'M265,100 Q245,100 218,115 Q196,130 187,148 Q180,162 173,178 Q167,194 161,210 Q157,225 155,240 Q200,250 250,254 Q280,256 312,255 L312,100 Q290,98 265,100Z', lx:238, ly:180 },
+  'R Frontal':  { d:'M348,100 Q368,100 391,115 Q410,130 422,148 Q430,162 440,178 Q449,194 455,210 Q458,225 460,240 Q420,250 370,254 Q340,256 316,255 L316,100 Q330,98 348,100Z', lx:385, ly:180 },
+  'L Temporal': { d:'M155,240 Q150,255 143,275 Q136,295 132,315 Q128,340 126,365 Q125,385 126,400 Q130,420 140,435 Q148,440 160,440 Q168,430 172,415 Q176,395 178,370 Q180,345 180,320 Q180,300 184,278 Q188,260 195,245Z', lx:152, ly:340 },
+  'R Temporal': { d:'M460,240 Q466,255 472,275 Q478,295 484,315 Q488,340 492,365 Q494,385 494,400 Q490,420 479,435 Q470,440 458,440 Q450,430 446,415 Q442,395 440,370 Q438,345 438,320 Q438,300 434,278 Q430,260 424,245Z', lx:468, ly:340 },
+  'L Parietal':  { d:'M195,245 Q188,260 184,278 Q180,300 180,320 Q180,345 178,370 Q176,395 172,415 Q168,430 160,440 Q185,445 220,448 Q260,450 312,450 L312,255 Q280,256 250,254 Q200,250 155,240Z', lx:242, ly:360 },
+  'R Parietal':  { d:'M424,245 Q430,260 434,278 Q438,300 438,320 Q438,345 440,370 Q442,395 446,415 Q450,430 458,440 Q435,445 400,448 Q360,450 316,450 L316,255 Q340,256 370,254 Q420,250 460,240Z', lx:382, ly:360 },
+  'L Occipital': { d:'M160,440 Q140,435 126,400 Q130,430 140,450 Q150,465 162,478 Q180,495 205,508 Q230,518 260,524 L312,526 L312,450 Q260,450 220,448 Q185,445 160,440Z', lx:235, ly:490 },
+  'R Occipital': { d:'M458,440 Q479,435 494,400 Q490,430 479,450 Q468,465 456,478 Q438,495 413,508 Q388,518 360,524 L316,526 L316,450 Q360,450 400,448 Q435,445 458,440Z', lx:390, ly:490 },
+};
+
+function buildHeadMap() {
+  const picker = document.getElementById('brain-picker');
+  let svg = `<svg viewBox="0 0 626 626">`;
+  Object.entries(BRAIN_ZONES).forEach(([name, z]) => {
+    const sel = selectedHeadRegions.includes(name);
+    svg += `<path class="brain-zone-pick${sel ? ' selected' : ''}" d="${z.d}" data-zone="${name}" onclick="toggleHeadRegion('${name}')"/>`;
+    svg += `<text class="brain-zone-label" x="${z.lx}" y="${z.ly}" onclick="toggleHeadRegion('${name}')">${name}</text>`;
+  });
+  svg += `<text x="313" y="88" text-anchor="middle" font-size="14" fill="rgba(0,0,0,0.3)" font-weight="600" font-family="Arial,sans-serif">Front</text>`;
+  svg += `<text x="313" y="548" text-anchor="middle" font-size="14" fill="rgba(0,0,0,0.3)" font-weight="600" font-family="Arial,sans-serif">Back</text>`;
+  svg += '</svg>';
+  picker.innerHTML = `<img src="brain.png" alt="Brain">${svg}`;
+  updateHeadMapSelection();
+}
+
+function toggleHeadRegion(id) {
+  const idx = selectedHeadRegions.indexOf(id);
+  if (idx >= 0) selectedHeadRegions.splice(idx, 1);
+  else selectedHeadRegions.push(id);
+  updateHeadMapSelection();
+}
+
+function updateHeadMapSelection() {
+  const sev = parseInt(document.getElementById('symptom-severity').value);
+  let color;
+  if (sev <= 3) color = 'rgba(80,180,100,0.6)';
+  else if (sev <= 6) color = 'rgba(220,180,40,0.6)';
+  else if (sev <= 8) color = 'rgba(220,120,40,0.6)';
+  else color = 'rgba(200,50,50,0.6)';
+
+  document.querySelectorAll('.brain-zone-pick').forEach(el => {
+    const name = el.dataset.zone;
+    const sel = selectedHeadRegions.includes(name);
+    el.classList.toggle('selected', sel);
+    el.style.fill = sel ? color : 'transparent';
+    el.style.stroke = sel ? color.replace('0.6', '0.9') : 'transparent';
+  });
+}
+
+function renderMiniHeadMap(locations, severity, large) {
+  const size = large ? 80 : 40;
+  let color;
+  if (severity <= 3) color = 'rgba(80,180,100,0.7)';
+  else if (severity <= 6) color = 'rgba(220,180,40,0.7)';
+  else if (severity <= 8) color = 'rgba(220,120,40,0.7)';
+  else color = 'rgba(200,50,50,0.7)';
+
+  // Map old-style IDs to brain zones for backward compatibility
+  const OLD_TO_ZONE = {
+    forehead_left:'L Frontal', forehead_right:'R Frontal',
+    left_forehead:'L Frontal', right_forehead:'R Frontal', top_front:'L Frontal',
+    left_temple:'L Temporal', right_temple:'R Temporal',
+    left_side:'L Temporal', right_side:'R Temporal',
+    top_left:'L Temporal', top_right:'R Temporal',
+    left_top:'L Parietal', right_top:'R Parietal',
+    crown:'L Parietal', top_crown:'R Parietal',
+    back_upper_left:'L Parietal', back_upper_right:'R Parietal',
+    back_lower_left:'L Occipital', back_lower_right:'R Occipital',
+    skull_base:'L Occipital', top_back:'L Occipital',
+    left_back_head:'L Occipital', right_back_head:'R Occipital',
+    left_neck:'L Occipital', right_neck:'R Occipital',
+    behind_left_eye:'L Frontal', behind_right_eye:'R Frontal',
+    left_eye_area:'L Frontal', right_eye_area:'R Frontal',
+    nose_sinus:'L Frontal', jaw:'L Temporal',
+  };
+  const zones = new Set(locations.map(l => OLD_TO_ZONE[l] || l));
+
+  let svg = `<svg viewBox="0 0 626 626">`;
+  Object.entries(BRAIN_ZONES).forEach(([name, z]) => {
+    if (zones.has(name)) {
+      svg += `<path d="${z.d}" fill="${color}" stroke="${color.replace('0.7','1')}" stroke-width="2"/>`;
+    }
+  });
+  svg += '</svg>';
+  return `<div class="mini-brain" style="width:${size}px;height:${size}px"><img src="brain.png" width="${size}" height="${size}">${svg}</div>`;
+}
+
+// ========== MEDICATIONS TAB ==========
+let medsViewDate = new Date();
+
+document.getElementById('med-prev-day').addEventListener('click', () => {
+  medsViewDate.setDate(medsViewDate.getDate() - 1);
+  renderMedsTab();
+});
+document.getElementById('med-next-day').addEventListener('click', () => {
+  medsViewDate.setDate(medsViewDate.getDate() + 1);
+  renderMedsTab();
+});
+
+function renderMedsTab() {
+  const dateStr = medsViewDate.toISOString().split('T')[0];
+  document.getElementById('med-current-date').textContent = formatDate(dateStr);
+
+  const meds = getMeds();
+  const logs = getMedLogs().filter(l => l.date === dateStr);
+
+  // Regular meds
+  const regular = meds.filter(m => m.schedule === 'regular');
+  const regularList = document.getElementById('meds-regular-list');
+  if (!regular.length) {
+    regularList.innerHTML = '<div class="empty-state" style="padding:12px">No regular meds set up.<br>Add them in Settings.</div>';
+  } else {
+    regularList.innerHTML = regular.map(m => {
+      const log = logs.find(l => l.medId === m.id && l.category === 'regular');
+      const checked = log && log.status === 'taken';
+      const missed = log && log.status === 'missed';
+      const timeLabel = m.typicalTime || '';
+      const takenTime = log && log.timeTaken ? fmtTime(log.timeTaken) : 'not yet';
+
+      // Check if it's a past day and not taken — mark as missed
+      const isPast = dateStr < new Date().toISOString().split('T')[0];
+      const showMissed = isPast && !log;
+
+      return `<div class="med-item glass-card" onclick="toggleMed('${m.id}','${dateStr}')">
+        <div class="med-check ${checked ? 'checked' : (showMissed || missed) ? 'missed' : ''}"></div>
+        <div class="med-info">
+          <div class="med-name">${esc(m.name)} ${esc(m.dose)}</div>
+          <div class="med-detail">${esc(timeLabel)} \u2014 ${checked ? takenTime : (showMissed || missed) ? 'missed' : takenTime}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // As-needed logs for this date
+  const asNeededLogs = logs.filter(l => l.category === 'as-needed');
+  document.getElementById('meds-asneeded-log').innerHTML = asNeededLogs.map(l =>
+    `<div class="glass-card" style="padding:10px;margin-bottom:6px">
+      <div style="font-weight:600">${esc(l.medName)} ${esc(l.dose)}</div>
+      <div style="font-size:12px;color:#5a7a90">${fmtTime(l.timeTaken)}${l.note ? ' \u2014 ' + esc(l.note) : ''}</div>
+    </div>`
+  ).join('');
+
+  // One-off logs for this date
+  const oneOffLogs = logs.filter(l => l.category === 'one-off');
+  document.getElementById('meds-oneoff-log').innerHTML = oneOffLogs.map(l =>
+    `<div class="glass-card" style="padding:10px;margin-bottom:6px">
+      <div style="font-weight:600">${esc(l.medName)} ${esc(l.dose)}</div>
+      <div style="font-size:12px;color:#5a7a90">${fmtTime(l.timeTaken)}${l.note ? ' \u2014 ' + esc(l.note) : ''}</div>
+    </div>`
+  ).join('');
+}
+
+function toggleMed(medId, dateStr) {
+  const logs = getMedLogs();
+  const idx = logs.findIndex(l => l.medId === medId && l.date === dateStr && l.category === 'regular');
+  if (idx >= 0) {
+    if (logs[idx].status === 'taken') {
+      logs.splice(idx, 1);
+    } else {
+      const now = new Date();
+      logs[idx].status = 'taken';
+      logs[idx].timeTaken = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    }
+  } else {
+    const med = getMeds().find(m => m.id === medId);
+    if (!med) return;
+    const now = new Date();
+    // Show time edit modal
+    showTimeEditModal(med, dateStr, null);
+    return;
+  }
+  setMedLogs(logs);
+  renderMedsTab();
+}
+
+function showTimeEditModal(med, dateStr, existingLog) {
+  const now = new Date();
+  const defaultTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  showModal(`Log ${med.name}`, `
+    <div class="form-group">
+      <label class="form-label">Time Taken</label>
+      <input type="time" class="form-input" id="modal-med-time" value="${defaultTime}">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: () => {
+      const time = document.getElementById('modal-med-time').value;
+      const logs = getMedLogs();
+      logs.push({
+        id: Date.now().toString(),
+        medId: med.id,
+        date: dateStr,
+        medName: med.name,
+        dose: med.dose,
+        timeTaken: time,
+        category: 'regular',
+        status: 'taken',
+        note: ''
+      });
+      setMedLogs(logs);
+      closeModal();
+      renderMedsTab();
+    }}
+  ]);
+}
+
+document.getElementById('log-asneeded-btn').addEventListener('click', () => {
+  const asNeeded = getMeds().filter(m => m.schedule === 'as-needed');
+  if (!asNeeded.length) { alert('No as-needed medications set up. Add them in Settings.'); return }
+  const now = new Date();
+  const defaultTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const options = asNeeded.map(m => `<option value="${m.id}">${esc(m.name)} ${esc(m.dose)}</option>`).join('');
+  showModal('Log As-Needed Med', `
+    <div class="form-group">
+      <label class="form-label">Medication</label>
+      <select class="form-select" id="modal-asneeded-sel">${options}</select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time Taken</label>
+      <input type="time" class="form-input" id="modal-asneeded-time" value="${defaultTime}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input type="text" class="form-input" id="modal-asneeded-note" placeholder="Reason...">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: () => {
+      const medId = document.getElementById('modal-asneeded-sel').value;
+      const med = getMeds().find(m => m.id === medId);
+      const logs = getMedLogs();
+      logs.push({
+        id: Date.now().toString(),
+        medId: med.id,
+        date: medsViewDate.toISOString().split('T')[0],
+        medName: med.name,
+        dose: med.dose,
+        timeTaken: document.getElementById('modal-asneeded-time').value,
+        category: 'as-needed',
+        status: 'taken',
+        note: document.getElementById('modal-asneeded-note').value.trim()
+      });
+      setMedLogs(logs);
+      closeModal();
+      renderMedsTab();
+    }}
+  ]);
+});
+
+document.getElementById('log-oneoff-btn').addEventListener('click', () => {
+  const now = new Date();
+  const defaultTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  showModal('Log One-Off Med', `
+    <div class="form-group">
+      <label class="form-label">Medication Name</label>
+      <input type="text" class="form-input" id="modal-oneoff-name" placeholder="e.g. Amoxicillin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dose</label>
+      <input type="text" class="form-input" id="modal-oneoff-dose" placeholder="e.g. 500mg">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time Taken</label>
+      <input type="time" class="form-input" id="modal-oneoff-time" value="${defaultTime}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input type="text" class="form-input" id="modal-oneoff-note" placeholder="Reason...">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: () => {
+      const name = document.getElementById('modal-oneoff-name').value.trim();
+      const dose = document.getElementById('modal-oneoff-dose').value.trim();
+      if (!name) { alert('Enter medication name'); return }
+      const logs = getMedLogs();
+      logs.push({
+        id: Date.now().toString(),
+        medId: null,
+        date: medsViewDate.toISOString().split('T')[0],
+        medName: name,
+        dose: dose,
+        timeTaken: document.getElementById('modal-oneoff-time').value,
+        category: 'one-off',
+        status: 'taken',
+        note: document.getElementById('modal-oneoff-note').value.trim()
+      });
+      setMedLogs(logs);
+      closeModal();
+      renderMedsTab();
+    }}
+  ]);
+});
+
+// ========== SEARCH ==========
+let searchTab = 'symptoms';
+document.querySelectorAll('.search-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    searchTab = tab.dataset.tab;
+    document.querySelectorAll('.search-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === searchTab));
+    document.getElementById('search-type-group').classList.toggle('hidden', searchTab === 'meds');
+    runSearch();
+  });
+});
+
+function populateSearchTypeFilter() {
+  const sel = document.getElementById('search-type-filter');
+  const types = getSymptomTypes();
+  sel.innerHTML = '<option value="">All types</option>' + types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+['search-text','search-type-filter','search-from','search-to'].forEach(id => {
+  document.getElementById(id).addEventListener('input', runSearch);
+  document.getElementById(id).addEventListener('change', runSearch);
+});
+
+document.getElementById('clear-search').addEventListener('click', () => {
+  document.getElementById('search-text').value = '';
+  document.getElementById('search-type-filter').value = '';
+  document.getElementById('search-from').value = '';
+  document.getElementById('search-to').value = '';
+  runSearch();
+});
+
+function runSearch() {
+  const text = document.getElementById('search-text').value.toLowerCase();
+  const type = document.getElementById('search-type-filter').value;
+  const from = document.getElementById('search-from').value;
+  const to = document.getElementById('search-to').value;
+  const results = document.getElementById('search-results');
+
+  if (searchTab === 'symptoms') {
+    let items = getSymptoms();
+    if (text) items = items.filter(s => (s.description || '').toLowerCase().includes(text) || s.type.toLowerCase().includes(text));
+    if (type) items = items.filter(s => s.type === type);
+    if (from) items = items.filter(s => s.date >= from);
+    if (to) items = items.filter(s => s.date <= to);
+    items.sort((a, b) => b.date.localeCompare(a.date));
+    if (!items.length) { results.innerHTML = '<div class="empty-state">No results</div>'; return }
+    results.innerHTML = items.map(s => renderSymptomCard(s)).join('');
+  } else {
+    let items = getMedLogs();
+    if (text) items = items.filter(l => l.medName.toLowerCase().includes(text) || (l.note || '').toLowerCase().includes(text));
+    if (from) items = items.filter(l => l.date >= from);
+    if (to) items = items.filter(l => l.date <= to);
+    items.sort((a, b) => b.date.localeCompare(a.date));
+    if (!items.length) { results.innerHTML = '<div class="empty-state">No results</div>'; return }
+    results.innerHTML = items.map(l => `
+      <div class="glass-card" style="padding:12px;margin-bottom:8px">
+        <div class="flex justify-between items-center">
+          <span style="font-weight:600">${esc(l.medName)} ${esc(l.dose)}</span>
+          <span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(0,170,220,0.1);color:#00AADD">${l.category}</span>
+        </div>
+        <div style="font-size:13px;color:#5a7a90">${formatDate(l.date)}, ${fmtTime(l.timeTaken)} \u2014 ${l.status}${l.note ? ' \u2014 ' + esc(l.note) : ''}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ========== SETTINGS ==========
+function renderSettings() {
+  renderSymptomTypeSettings();
+  renderMedSettings();
+  renderBackupInfo();
+  GistSync.updateUI();
+}
+
+function renderSymptomTypeSettings() {
+  const types = getSymptomTypes();
+  const list = document.getElementById('symptom-types-list');
+  list.innerHTML = types.map((t, i) => `
+    <div class="settings-item">
+      <span class="settings-item-text" onclick="renameType(${i})">${esc(t)}</span>
+      <div class="settings-actions">
+        <button class="icon-btn danger" onclick="deleteType(${i})">\u2717</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('add-type-btn').addEventListener('click', () => {
+  showModal('Add Symptom Type', `
+    <div class="form-group">
+      <label class="form-label">Type Name</label>
+      <input type="text" class="form-input" id="modal-type-name" placeholder="e.g. Brain Fog">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Add', cls: 'btn-primary', action: () => {
+      const name = document.getElementById('modal-type-name').value.trim();
+      if (!name) return;
+      const types = getSymptomTypes();
+      if (types.includes(name)) { alert('Type already exists'); return }
+      types.push(name);
+      setSymptomTypes(types);
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+});
+
+function renameType(idx) {
+  const types = getSymptomTypes();
+  showModal('Rename Type', `
+    <div class="form-group">
+      <label class="form-label">New Name</label>
+      <input type="text" class="form-input" id="modal-rename-type" value="${esc(types[idx])}">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: () => {
+      const newName = document.getElementById('modal-rename-type').value.trim();
+      if (!newName) return;
+      const oldName = types[idx];
+      types[idx] = newName;
+      setSymptomTypes(types);
+      // Update existing symptoms
+      const symptoms = getSymptoms();
+      symptoms.forEach(s => { if (s.type === oldName) s.type = newName });
+      setSymptoms(symptoms);
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+}
+
+function deleteType(idx) {
+  const types = getSymptomTypes();
+  const name = types[idx];
+  showModal('Delete Type', `<p>Delete "${esc(name)}"?<br><small>Existing entries won't be affected.</small></p>`, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Delete', cls: 'btn-danger', action: () => {
+      types.splice(idx, 1);
+      setSymptomTypes(types);
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+}
+
+// Medication settings
+function renderMedSettings() {
+  const meds = getMeds();
+  const regular = meds.filter(m => m.schedule === 'regular');
+  const asNeeded = meds.filter(m => m.schedule === 'as-needed');
+
+  document.getElementById('settings-meds-regular').innerHTML =
+    (regular.length ? '<div class="settings-item" style="padding:8px 12px"><span class="settings-item-sub" style="font-weight:700">Regular</span></div>' : '') +
+    regular.map(m => `
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-text">${esc(m.name)} ${esc(m.dose)}</div>
+          <div class="settings-item-sub">${esc(m.typicalTime || '')}</div>
+        </div>
+        <div class="settings-actions">
+          <button class="icon-btn" onclick="editMed('${m.id}')">&#9998;</button>
+          <button class="icon-btn danger" onclick="deleteMed('${m.id}')">\u2717</button>
+        </div>
+      </div>
+    `).join('');
+
+  document.getElementById('settings-meds-asneeded').innerHTML =
+    (asNeeded.length ? '<div class="settings-item" style="padding:8px 12px"><span class="settings-item-sub" style="font-weight:700">As-Needed</span></div>' : '') +
+    asNeeded.map(m => `
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-text">${esc(m.name)} ${esc(m.dose)}</div>
+        </div>
+        <div class="settings-actions">
+          <button class="icon-btn" onclick="editMed('${m.id}')">&#9998;</button>
+          <button class="icon-btn danger" onclick="deleteMed('${m.id}')">\u2717</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+document.getElementById('add-med-btn').addEventListener('click', () => showMedModal());
+
+function showMedModal(existingMed) {
+  const m = existingMed || { name: '', dose: '', schedule: 'regular', typicalTime: 'Morning' };
+  const title = existingMed ? 'Edit Medication' : 'Add Medication';
+  showModal(title, `
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input type="text" class="form-input" id="modal-med-name" value="${esc(m.name)}" placeholder="e.g. Lisinopril">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dose</label>
+      <input type="text" class="form-input" id="modal-med-dose" value="${esc(m.dose)}" placeholder="e.g. 10mg">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Schedule</label>
+      <select class="form-select" id="modal-med-schedule">
+        <option value="regular" ${m.schedule === 'regular' ? 'selected' : ''}>Regular (daily)</option>
+        <option value="as-needed" ${m.schedule === 'as-needed' ? 'selected' : ''}>As-Needed</option>
+      </select>
+    </div>
+    <div class="form-group" id="modal-med-time-group">
+      <label class="form-label">Typical Time</label>
+      <select class="form-select" id="modal-med-typical-time">
+        <option value="Morning" ${m.typicalTime === 'Morning' ? 'selected' : ''}>Morning</option>
+        <option value="Night" ${m.typicalTime === 'Night' ? 'selected' : ''}>Night</option>
+        <option value="Morning & Night" ${m.typicalTime === 'Morning & Night' ? 'selected' : ''}>Morning & Night</option>
+      </select>
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: () => {
+      const name = document.getElementById('modal-med-name').value.trim();
+      const dose = document.getElementById('modal-med-dose').value.trim();
+      const schedule = document.getElementById('modal-med-schedule').value;
+      const typicalTime = schedule === 'regular' ? document.getElementById('modal-med-typical-time').value : null;
+      if (!name) { alert('Enter medication name'); return }
+      const meds = getMeds();
+      if (existingMed) {
+        const idx = meds.findIndex(x => x.id === existingMed.id);
+        if (idx >= 0) meds[idx] = { ...meds[idx], name, dose, schedule, typicalTime };
+      } else {
+        meds.push({ id: Date.now().toString(), name, dose, schedule, typicalTime });
+      }
+      setMeds(meds);
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+
+  // Toggle typical time visibility
+  document.getElementById('modal-med-schedule').addEventListener('change', e => {
+    document.getElementById('modal-med-time-group').style.display = e.target.value === 'regular' ? '' : 'none';
+  });
+  if (m.schedule === 'as-needed') document.getElementById('modal-med-time-group').style.display = 'none';
+}
+
+function editMed(id) {
+  const med = getMeds().find(m => m.id === id);
+  if (med) showMedModal(med);
+}
+
+function deleteMed(id) {
+  showModal('Delete Medication', '<p>Are you sure?</p>', [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Delete', cls: 'btn-danger', action: () => {
+      setMeds(getMeds().filter(m => m.id !== id));
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+}
+
+// Change password
+document.getElementById('change-password-btn').addEventListener('click', () => {
+  showModal('Change PIN', `
+    <div class="form-group">
+      <label class="form-label">Current PIN</label>
+      <input type="password" class="form-input" id="modal-old-pw" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label class="form-label">New PIN</label>
+      <input type="password" class="form-input" id="modal-new-pw" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm New PIN</label>
+      <input type="password" class="form-input" id="modal-confirm-pw" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Save', cls: 'btn-primary', action: async () => {
+      const oldHash = await hashPassword(document.getElementById('modal-old-pw').value);
+      if (oldHash !== DB.get('passwordHash')) { alert('Wrong current PIN'); return }
+      const newPw = document.getElementById('modal-new-pw').value;
+      if (newPw !== document.getElementById('modal-confirm-pw').value) { alert('PINs don\'t match'); return }
+      if (!/^\d{4}$/.test(newPw)) { alert('Must be exactly 4 digits'); return }
+      DB.set('passwordHash', await hashPassword(newPw));
+      closeModal();
+      alert('PIN changed');
+    }}
+  ]);
+});
+
+// ========== BACKUP ==========
+document.getElementById('download-backup-btn').addEventListener('click', () => {
+  const data = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    symptoms: getSymptoms(),
+    symptomTypes: getSymptomTypes(),
+    medications: getMeds(),
+    medLogs: getMedLogs()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `symptom-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  DB.set('lastBackup', new Date().toISOString());
+  renderBackupInfo();
+});
+
+document.getElementById('restore-backup-btn').addEventListener('click', () => {
+  showModal('Restore Backup', '<p>This will replace ALL current data with the backup file. Are you sure?</p>', [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Choose File', cls: 'btn-primary', action: () => {
+      closeModal();
+      document.getElementById('restore-file-input').click();
+    }}
+  ]);
+});
+
+document.getElementById('restore-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.symptoms) setSymptoms(data.symptoms);
+      if (data.symptomTypes) setSymptomTypes(data.symptomTypes);
+      if (data.medications) setMeds(data.medications);
+      if (data.medLogs) setMedLogs(data.medLogs);
+      alert('Backup restored successfully');
+      renderSettings();
+    } catch { alert('Invalid backup file') }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function renderBackupInfo() {
+  const last = DB.get('lastBackup', null);
+  document.getElementById('last-backup-date').textContent = last
+    ? 'Last backup: ' + formatDate(last.split('T')[0])
+    : 'No backups yet';
+}
+
+function checkBackupReminder() {
+  const last = DB.get('lastBackup', null);
+  if (!last) return;
+  const daysSince = (Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSince >= 7) {
+    showModal('Backup Reminder', '<p>It\'s been over a week since your last backup. Download one now?</p>', [
+      { text: 'Later', cls: 'btn-secondary', action: closeModal },
+      { text: 'Download', cls: 'btn-primary', action: () => {
+        closeModal();
+        document.getElementById('download-backup-btn').click();
+      }}
+    ]);
+  }
+}
+
+// ========== GITHUB SYNC UI ==========
+document.getElementById('sync-setup-btn').addEventListener('click', () => {
+  showModal('Connect GitHub', `
+    <p style="font-size:13px;color:#7a9cc0;margin-bottom:12px;text-align:left">
+      Create a <b>Personal Access Token</b> at GitHub:<br>
+      Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Fine-grained tokens<br>
+      Only needs <b>Gists</b> read/write permission.
+    </p>
+    <div class="form-group">
+      <label class="form-label">GitHub Token</label>
+      <input type="password" class="form-input" id="modal-gh-token" placeholder="github_pat_...">
+    </div>
+  `, [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Connect', cls: 'btn-primary', action: async () => {
+      const token = document.getElementById('modal-gh-token').value.trim();
+      if (!token) return;
+      closeModal();
+      const result = await GistSync.connect(token);
+      if (result.ok) {
+        showModal('Connected', '<p>GitHub sync is active. Your data will auto-sync on every change.</p>', [
+          { text: 'OK', cls: 'btn-primary', action: closeModal }
+        ]);
+        renderSettings();
+      } else {
+        showModal('Connection Failed', '<p>' + result.error + '</p>', [
+          { text: 'OK', cls: 'btn-secondary', action: closeModal }
+        ]);
+      }
+    }}
+  ]);
+});
+
+document.getElementById('sync-now-btn').addEventListener('click', async () => {
+  await GistSync.push();
+  GistSync.updateUI();
+});
+
+document.getElementById('sync-disconnect-btn').addEventListener('click', () => {
+  showModal('Disconnect GitHub?', '<p>Your data will stay on the device but will no longer sync to GitHub.</p>', [
+    { text: 'Cancel', cls: 'btn-secondary', action: closeModal },
+    { text: 'Disconnect', cls: 'btn-danger', action: () => {
+      GistSync.disconnect();
+      closeModal();
+      renderSettings();
+    }}
+  ]);
+});
+
+// ========== MODAL SYSTEM ==========
+function showModal(title, bodyHTML, buttons) {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+  content.innerHTML = `<h3>${title}</h3>${bodyHTML}
+    <div class="modal-actions">${buttons.map((b, i) =>
+      `<button class="btn ${b.cls}" id="modal-btn-${i}">${b.text}</button>`
+    ).join('')}</div>`;
+  buttons.forEach((b, i) => {
+    document.getElementById('modal-btn-' + i).addEventListener('click', b.action);
+  });
+  overlay.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// ========== HELPERS ==========
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtTime(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hr = h % 12 || 12;
+  return hr + ':' + m.toString().padStart(2, '0') + ' ' + ampm;
+}
+
+// ========== PWA REGISTRATION ==========
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
