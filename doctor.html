@@ -269,6 +269,7 @@ function sevColor(v) { if (v<=3) return 'var(--green)'; if (v<=6) return 'var(--
 function sevClass(v) { if (v<=3) return 'green'; if (v<=6) return 'yellow'; if (v<=8) return 'orange'; return 'red' }
 function daysBetween(a,b) { return Math.round((new Date(b)-new Date(a))/(86400000)) + 1 }
 function localDateStr(d) { d = d || new Date(); const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}` }
+function parseLocalDate(s) { const [y,m,day] = s.split('-').map(Number); return new Date(y, m-1, day) }
 
 // ========== DATE RANGE ==========
 let dateFrom, dateTo;
@@ -617,8 +618,8 @@ function renderMedAdherence(meds, medLogs, totalDays) {
 
   // Build date list
   const dates = [];
-  const d = new Date(dateFrom);
-  const end = new Date(dateTo);
+  const d = parseLocalDate(dateFrom);
+  const end = parseLocalDate(dateTo);
   while (d <= end) { dates.push(localDateStr(d)); d.setDate(d.getDate()+1) }
 
   let cards = regular.map(med => {
@@ -629,7 +630,7 @@ function renderMedAdherence(meds, medLogs, totalDays) {
     // Day-of-week headers
     const dayLabels = ['S','M','T','W','T','F','S'];
     // Pad to start on correct day of week
-    const startDow = new Date(dateFrom).getDay();
+    const startDow = parseLocalDate(dateFrom).getDay();
     for (let i = 0; i < 7; i++) calCells += `<div class="cal-header">${dayLabels[i]}</div>`;
     for (let i = 0; i < startDow; i++) calCells += `<div class="cal-cell cal-empty"></div>`;
 

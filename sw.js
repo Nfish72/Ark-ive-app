@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symptom-tracker-v9';
+const CACHE_NAME = 'symptom-tracker-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -27,8 +27,6 @@ self.addEventListener('activate', e => {
     const keys = await caches.keys();
     await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
     await self.clients.claim();
-    const clientList = await self.clients.matchAll({ type: 'window' });
-    clientList.forEach(c => c.navigate(c.url).catch(() => {}));
   })());
 });
 
@@ -48,8 +46,10 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(e.request)
         .then(resp => {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, copy)).catch(() => {});
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then(c => c.put(e.request, copy)).catch(() => {});
+          }
           return resp;
         })
         .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))

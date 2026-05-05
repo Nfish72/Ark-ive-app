@@ -759,14 +759,17 @@ const DB = {
   set(key, val) {
     try {
       localStorage.setItem('st_' + key, JSON.stringify(val));
-      GistSync.queueSync();
-      if (typeof updateBackupBanner === 'function') updateBackupBanner();
     } catch (err) {
       if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
         alert('Storage is full. Please export a backup, then clear old entries to free space.');
+      } else {
+        console.error('DB.set failed:', err);
       }
-      throw err;
+      return false;
     }
+    GistSync.queueSync();
+    if (typeof updateBackupBanner === 'function') updateBackupBanner();
+    return true;
   },
   remove(key) { localStorage.removeItem('st_' + key) }
 };
@@ -783,6 +786,12 @@ function getMedLogs() { return DB.get('medLogs', []) }
 function setMedLogs(l) { DB.set('medLogs', l) }
 
 // ========== GITHUB GIST SYNC ==========
+function timedFetch(url, opts, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms || 15000);
+  return fetch(url, { ...(opts || {}), signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
 const GistSync = {
   _timer: null,
   _debounceMs: 3000,
@@ -817,10 +826,21 @@ const GistSync = {
   },
 
   restoreData(data) {
-    if (data.symptoms) { localStorage.setItem('st_symptoms', JSON.stringify(data.symptoms)); }
-    if (data.symptomTypes) { localStorage.setItem('st_types', JSON.stringify(data.symptomTypes)); }
-    if (data.medications) { localStorage.setItem('st_medications', JSON.stringify(data.medications)); }
-    if (data.medLogs) { localStorage.setItem('st_medLogs', JSON.stringify(data.medLogs)); }
+    try {
+      if (data.symptoms) { localStorage.setItem('st_symptoms', JSON.stringify(data.symptoms)); }
+      if (data.symptomTypes) { localStorage.setItem('st_types', JSON.stringify(data.symptomTypes)); }
+      if (data.medications) { localStorage.setItem('st_medications', JSON.stringify(data.medications)); }
+      if (data.medLogs) { localStorage.setItem('st_medLogs', JSON.stringify(data.medLogs)); }
+    } catch (err) {
+      if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
+        alert('Restore failed: storage is full. Free up space and try again.');
+      } else {
+        console.error('restoreData failed:', err);
+      }
+      return false;
+    }
+    if (typeof updateBackupBanner === 'function') updateBackupBanner();
+    return true;
   },
 
   queueSync() {
@@ -837,7 +857,7 @@ const GistSync = {
     this._pushing = true;
     this.setIndicator('syncing');
     try {
-      const resp = await fetch('https://api.github.com/gists/' + this.getGistId(), {
+      const resp = await timedFetch('https://api.github.com/gists/' + this.getGistId(), {
         method: 'PATCH',
         headers: {
           'Authorization': 'Bearer ' + this.getToken(),
@@ -864,7 +884,7 @@ const GistSync = {
     if (!this.isConnected()) return null;
     this.setIndicator('syncing');
     try {
-      const resp = await fetch('https://api.github.com/gists/' + this.getGistId(), {
+      const resp = await timedFetch('https://api.github.com/gists/' + this.getGistId(), {
         headers: { 'Authorization': 'Bearer ' + this.getToken() }
       });
       if (!resp.ok) throw new Error('Pull failed: ' + resp.status);
@@ -884,7 +904,7 @@ const GistSync = {
   async createGist() {
     this.setIndicator('syncing');
     try {
-      const resp = await fetch('https://api.github.com/gists', {
+      const resp = await timedFetch('https://api.github.com/gists', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + this.getToken(),
@@ -911,7 +931,7 @@ const GistSync = {
 
   async findExistingGist() {
     try {
-      const resp = await fetch('https://api.github.com/gists?per_page=100', {
+      const resp = await timedFetch('https://api.github.com/gists?per_page=100', {
         headers: { 'Authorization': 'Bearer ' + this.getToken() }
       });
       if (!resp.ok) return null;
@@ -925,7 +945,7 @@ const GistSync = {
     this.setToken(token);
     // Verify token
     try {
-      const resp = await fetch('https://api.github.com/user', {
+      const resp = await timedFetch('https://api.github.com/user', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (!resp.ok) { this.removeToken(); return { ok: false, error: 'Invalid token' }; }
@@ -1006,18 +1026,20 @@ const GistSync = {
 
   async initOnLoad() {
     if (!this.isConnected()) { this.setIndicator('offline'); return; }
-    // Pull latest on app load
     const remoteData = await this.pull();
+    let restored = false;
     if (remoteData) {
       const remoteTime = new Date(remoteData.lastModified || 0).getTime();
       const lastSync = this.getLastSync();
       const localTime = lastSync ? new Date(lastSync).getTime() : 0;
       if (remoteTime > localTime) {
         this.restoreData(remoteData);
+        restored = true;
       }
+      this.setLastSync(new Date().toISOString());
     }
-    this.setLastSync(new Date().toISOString());
     this.updateUI();
+    if (restored && typeof rerenderActiveScreen === 'function') rerenderActiveScreen();
   }
 };
 
@@ -1040,6 +1062,13 @@ function navigateTo(screen) {
   if (screen === 'add') resetAddForm();
   if (screen === 'search') { populateSearchTypeFilter(); runSearch() }
   if (screen === 'settings') renderSettings();
+}
+
+function rerenderActiveScreen() {
+  if (currentScreen === 'log') renderSymptomLog();
+  else if (currentScreen === 'meds') renderMedsTab();
+  else if (currentScreen === 'search') runSearch();
+  else if (currentScreen === 'settings') renderSettings();
 }
 
 // ========== SYMPTOM LOG ==========
@@ -1861,10 +1890,13 @@ document.getElementById('restore-file-input').addEventListener('change', e => {
       if (data.symptomTypes) setSymptomTypes(data.symptomTypes);
       if (data.medications) setMeds(data.medications);
       if (data.medLogs) setMedLogs(data.medLogs);
+      DB.set('firstRunComplete', true);
       alert('Backup restored successfully');
+      rerenderActiveScreen();
       renderSettings();
     } catch { alert('Invalid backup file') }
   };
+  reader.onerror = () => alert('Could not read file');
   reader.readAsText(file);
   e.target.value = '';
 });
@@ -1940,6 +1972,7 @@ function checkBackupReminder() {
 function maybeShowRecoveryFlow() {
   if (DB.get('firstRunComplete', false)) return false;
   if (hasAnyData()) { DB.set('firstRunComplete', true); return false; }
+  if (GistSync.isConnected()) { return false; }
 
   showModal('Welcome — Restore Your Data?', `
     <p style="font-size:14px;color:#c8daf0;margin-bottom:12px">
@@ -1955,12 +1988,10 @@ function maybeShowRecoveryFlow() {
       closeModal();
     }},
     { text: 'Restore from File', cls: 'btn-secondary', action: () => {
-      DB.set('firstRunComplete', true);
       closeModal();
       document.getElementById('restore-file-input').click();
     }},
     { text: 'Restore from GitHub', cls: 'btn-primary', action: () => {
-      DB.set('firstRunComplete', true);
       closeModal();
       navigateTo('settings');
       document.getElementById('sync-setup-btn').click();
@@ -2007,6 +2038,7 @@ document.getElementById('sync-setup-btn').addEventListener('click', () => {
 });
 
 document.getElementById('sync-now-btn').addEventListener('click', async () => {
+  GistSync.setIndicator('syncing');
   await GistSync.push();
   GistSync.updateUI();
 });
@@ -2026,9 +2058,9 @@ document.getElementById('sync-disconnect-btn').addEventListener('click', () => {
 function showModal(title, bodyHTML, buttons) {
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
-  content.innerHTML = `<h3>${title}</h3>${bodyHTML}
+  content.innerHTML = `<h3>${esc(title)}</h3>${bodyHTML}
     <div class="modal-actions">${buttons.map((b, i) =>
-      `<button class="btn ${b.cls}" id="modal-btn-${i}">${b.text}</button>`
+      `<button class="btn ${b.cls}" id="modal-btn-${i}">${esc(b.text)}</button>`
     ).join('')}</div>`;
   buttons.forEach((b, i) => {
     document.getElementById('modal-btn-' + i).addEventListener('click', b.action);
