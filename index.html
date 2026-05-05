@@ -730,9 +730,27 @@ body::before{
 
 <script>
 // ========== DATA LAYER ==========
+function localDateStr(d) {
+  d = d || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 const DB = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem('st_' + key)) || fallback } catch { return fallback } },
-  set(key, val) { localStorage.setItem('st_' + key, JSON.stringify(val)); GistSync.queueSync(); },
+  set(key, val) {
+    try {
+      localStorage.setItem('st_' + key, JSON.stringify(val));
+      GistSync.queueSync();
+    } catch (err) {
+      if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
+        alert('Storage is full. Please export a backup, then clear old entries to free space.');
+      }
+      throw err;
+    }
+  },
   remove(key) { localStorage.removeItem('st_' + key) }
 };
 
@@ -794,8 +812,12 @@ const GistSync = {
     this._timer = setTimeout(() => this.push(), this._debounceMs);
   },
 
+  _pushing: false,
+  _pushAgain: false,
   async push() {
     if (!this.isConnected()) return;
+    if (this._pushing) { this._pushAgain = true; return; }
+    this._pushing = true;
     this.setIndicator('syncing');
     try {
       const resp = await fetch('https://api.github.com/gists/' + this.getGistId(), {
@@ -815,6 +837,9 @@ const GistSync = {
     } catch (e) {
       console.error('Sync push error:', e);
       this.setIndicator('error');
+    } finally {
+      this._pushing = false;
+      if (this._pushAgain) { this._pushAgain = false; this.queueSync(); }
     }
   },
 
@@ -1160,7 +1185,7 @@ function resetAddForm() {
   editingSymptomId = null;
   document.getElementById('add-screen-title').textContent = 'Add Symptom';
   const now = new Date();
-  document.getElementById('symptom-date').value = now.toISOString().split('T')[0];
+  document.getElementById('symptom-date').value = localDateStr(now);
   document.getElementById('symptom-start-time').value = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   document.getElementById('symptom-end-time').value = '';
   setDurationType('single');
@@ -1328,7 +1353,7 @@ document.getElementById('med-next-day').addEventListener('click', () => {
 });
 
 function renderMedsTab() {
-  const dateStr = medsViewDate.toISOString().split('T')[0];
+  const dateStr = localDateStr(medsViewDate);
   document.getElementById('med-current-date').textContent = formatDate(dateStr);
 
   const meds = getMeds();
@@ -1348,7 +1373,7 @@ function renderMedsTab() {
       const takenTime = log && log.timeTaken ? fmtTime(log.timeTaken) : 'not yet';
 
       // Check if it's a past day and not taken — mark as missed
-      const isPast = dateStr < new Date().toISOString().split('T')[0];
+      const isPast = dateStr < localDateStr();
       const showMissed = isPast && !log;
 
       return `<div class="med-item glass-card" onclick="toggleMed('${m.id}','${dateStr}')">
@@ -1462,7 +1487,7 @@ document.getElementById('log-asneeded-btn').addEventListener('click', () => {
       logs.push({
         id: Date.now().toString(),
         medId: med.id,
-        date: medsViewDate.toISOString().split('T')[0],
+        date: localDateStr(medsViewDate),
         medName: med.name,
         dose: med.dose,
         timeTaken: document.getElementById('modal-asneeded-time').value,
@@ -1507,7 +1532,7 @@ document.getElementById('log-oneoff-btn').addEventListener('click', () => {
       logs.push({
         id: Date.now().toString(),
         medId: null,
-        date: medsViewDate.toISOString().split('T')[0],
+        date: localDateStr(medsViewDate),
         medName: name,
         dose: dose,
         timeTaken: document.getElementById('modal-oneoff-time').value,
@@ -1791,7 +1816,7 @@ document.getElementById('download-backup-btn').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `symptom-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `symptom-tracker-backup-${localDateStr()}.json`;
   a.click();
   URL.revokeObjectURL(url);
   DB.set('lastBackup', new Date().toISOString());
@@ -1938,6 +1963,7 @@ function fmtTime(timeStr) {
 }
 
 // ========== STARTUP ==========
+localStorage.removeItem('st_passwordHash');
 document.getElementById('nav-bar-wrap').classList.add('visible');
 navigateTo('log');
 checkBackupReminder();
@@ -1945,7 +1971,16 @@ GistSync.initOnLoad();
 
 // ========== PWA REGISTRATION ==========
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update().catch(() => {});
+    setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+  }).catch(() => {});
 }
 </script>
 </body>
