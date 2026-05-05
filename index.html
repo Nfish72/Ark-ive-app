@@ -196,6 +196,21 @@ body::before{
   margin-bottom:12px;padding:4px 0;
 }
 
+/* ========== BACKUP WARNING BANNER ========== */
+#backup-warning{
+  display:none;
+  background:linear-gradient(180deg,#3a2a08 0%,#2a1f08 100%);
+  border-bottom:1px solid #8a6a18;
+  color:#ffce6a;
+  padding:10px 14px;
+  font-size:13px;
+  text-align:center;
+  cursor:pointer;
+  position:relative;z-index:13;
+}
+#backup-warning.visible{display:block}
+#backup-warning b{color:#ffe09a}
+
 /* ========== NAV BAR ========== */
 .nav-bar-wrap{
   display:none;position:relative;z-index:12;
@@ -505,6 +520,7 @@ body::before{
 
 <div id="app">
 <div class="sync-indicator offline" id="sync-indicator" title="Sync status"></div>
+<div id="backup-warning"><b>⚠ Your data is not backed up.</b> Tap to set up GitHub sync or download a backup.</div>
 
   <!-- SYMPTOM LOG -->
   <div id="log-screen" class="screen">
@@ -744,6 +760,7 @@ const DB = {
     try {
       localStorage.setItem('st_' + key, JSON.stringify(val));
       GistSync.queueSync();
+      if (typeof updateBackupBanner === 'function') updateBackupBanner();
     } catch (err) {
       if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
         alert('Storage is full. Please export a backup, then clear old entries to free space.');
@@ -1859,19 +1876,101 @@ function renderBackupInfo() {
     : 'No backups yet';
 }
 
+function hasAnyData() {
+  const s = DB.get('symptoms', []);
+  const m = DB.get('medications', []);
+  const l = DB.get('medLogs', []);
+  return s.length > 0 || m.length > 0 || l.length > 0;
+}
+
+function updateBackupBanner() {
+  const banner = document.getElementById('backup-warning');
+  if (!banner) return;
+  const connected = GistSync.isConnected();
+  const lastBackup = DB.get('lastBackup', null);
+  const daysSinceBackup = lastBackup ? (Date.now() - new Date(lastBackup).getTime()) / 86400000 : Infinity;
+  const atRisk = hasAnyData() && !connected && daysSinceBackup > 7;
+  banner.classList.toggle('visible', atRisk);
+}
+
+document.getElementById('backup-warning').addEventListener('click', () => navigateTo('settings'));
+
 function checkBackupReminder() {
   const last = DB.get('lastBackup', null);
-  if (!last) return;
-  const daysSince = (Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24);
-  if (daysSince >= 7) {
-    showModal('Backup Reminder', '<p>It\'s been over a week since your last backup. Download one now?</p>', [
-      { text: 'Later', cls: 'btn-secondary', action: closeModal },
-      { text: 'Download', cls: 'btn-primary', action: () => {
+  const firstSeen = DB.get('firstSeen', null);
+  const connected = GistSync.isConnected();
+
+  if (!firstSeen && hasAnyData()) DB.set('firstSeen', new Date().toISOString());
+
+  const daysSinceBackup = last ? (Date.now() - new Date(last).getTime()) / 86400000 : Infinity;
+  const daysSinceFirstSeen = firstSeen ? (Date.now() - new Date(firstSeen).getTime()) / 86400000 : 0;
+  const lastNag = DB.get('lastBackupNag', null);
+  const daysSinceNag = lastNag ? (Date.now() - new Date(lastNag).getTime()) / 86400000 : Infinity;
+
+  if (connected) { updateBackupBanner(); return; }
+  if (daysSinceNag < 1) { updateBackupBanner(); return; }
+
+  const neverBackedUpOldEnough = !last && hasAnyData() && daysSinceFirstSeen >= 1;
+  const stale = last && daysSinceBackup >= 7;
+
+  if (neverBackedUpOldEnough || stale) {
+    DB.set('lastBackupNag', new Date().toISOString());
+    showModal('Back Up Your Data', `
+      <p style="font-size:14px;color:#c8daf0;margin-bottom:8px">
+        Your data lives only on this phone. If the app is removed or the phone is lost, the data is gone.
+      </p>
+      <p style="font-size:13px;color:#7a9cc0">Choose at least one:</p>
+    `, [
+      { text: 'Later', cls: 'btn-secondary', action: () => { closeModal(); updateBackupBanner(); } },
+      { text: 'Download File', cls: 'btn-secondary', action: () => {
         closeModal();
         document.getElementById('download-backup-btn').click();
+        updateBackupBanner();
+      }},
+      { text: 'Connect GitHub', cls: 'btn-primary', action: () => {
+        closeModal();
+        navigateTo('settings');
+        document.getElementById('sync-setup-btn').click();
       }}
     ]);
   }
+  updateBackupBanner();
+}
+
+function maybeShowRecoveryFlow() {
+  if (DB.get('firstRunComplete', false)) return false;
+  if (hasAnyData()) { DB.set('firstRunComplete', true); return false; }
+
+  showModal('Welcome — Restore Your Data?', `
+    <p style="font-size:14px;color:#c8daf0;margin-bottom:12px">
+      If you've used Symptom Tracker before (different phone, reinstall, etc.) you can pull your data back.
+    </p>
+    <p style="font-size:13px;color:#7a9cc0;margin-bottom:0">
+      Otherwise tap "Start Fresh" to begin a new log.
+    </p>
+  `, [
+    { text: 'Start Fresh', cls: 'btn-secondary', action: () => {
+      DB.set('firstRunComplete', true);
+      DB.set('firstSeen', new Date().toISOString());
+      closeModal();
+    }},
+    { text: 'Restore from File', cls: 'btn-secondary', action: () => {
+      DB.set('firstRunComplete', true);
+      closeModal();
+      document.getElementById('restore-file-input').click();
+    }},
+    { text: 'Restore from GitHub', cls: 'btn-primary', action: () => {
+      DB.set('firstRunComplete', true);
+      closeModal();
+      navigateTo('settings');
+      document.getElementById('sync-setup-btn').click();
+    }}
+  ]);
+  return true;
+}
+
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
 }
 
 // ========== GITHUB SYNC UI ==========
@@ -1966,7 +2065,9 @@ function fmtTime(timeStr) {
 localStorage.removeItem('st_passwordHash');
 document.getElementById('nav-bar-wrap').classList.add('visible');
 navigateTo('log');
+maybeShowRecoveryFlow();
 checkBackupReminder();
+updateBackupBanner();
 GistSync.initOnLoad();
 
 // ========== PWA REGISTRATION ==========
