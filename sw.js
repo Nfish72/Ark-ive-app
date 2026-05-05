@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symptom-tracker-v6';
+const CACHE_NAME = 'symptom-tracker-v7';
 const ASSETS = [
   './',
   './index.html',
