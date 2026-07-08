@@ -263,8 +263,8 @@ const BRAIN_ZONES = {
 
 // ========== UTILS ==========
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML }
-function fmtDate(d) { if (!d) return ''; const [y,m,day] = d.split('-'); return new Date(y,m-1,day).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) }
-function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return (hr%12||12)+':'+m+(hr<12?' AM':' PM') }
+function fmtDate(d) { if (!d) return ''; const [y,m,day] = d.split('-'); if (!day) return d; return new Date(y,m-1,day).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) }
+function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); if (m === undefined || isNaN(hr)) return t; return (hr%12||12)+':'+m+(hr<12?' AM':' PM') }
 function sevColor(v) { if (v<=3) return 'var(--green)'; if (v<=6) return 'var(--yellow)'; if (v<=8) return 'var(--orange)'; return 'var(--red)' }
 function sevClass(v) { if (v<=3) return 'green'; if (v<=6) return 'yellow'; if (v<=8) return 'orange'; return 'red' }
 function daysBetween(a,b) { return Math.round((new Date(b)-new Date(a))/(86400000)) + 1 }
@@ -448,7 +448,9 @@ function renderSeverityChart(symptoms) {
     const showLabel = dates.length <= 14 || i % Math.ceil(dates.length / 14) === 0;
     if (showLabel) {
       const parts = date.split('-');
-      svg += `<text x="${x + barW/2}" y="${plotTop + plotH + 14}" text-anchor="middle" font-size="8" fill="#8a9aaa">${parseInt(parts[1])}/${parseInt(parts[2])}</text>`;
+      if (parts.length === 3) {
+        svg += `<text x="${x + barW/2}" y="${plotTop + plotH + 14}" text-anchor="middle" font-size="8" fill="#8a9aaa">${parseInt(parts[1])}/${parseInt(parts[2])}</text>`;
+      }
     }
   });
 

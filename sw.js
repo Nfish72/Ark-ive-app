@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symptom-tracker-v10';
+const CACHE_NAME = 'symptom-tracker-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -48,11 +48,13 @@ self.addEventListener('fetch', e => {
         .then(resp => {
           if (resp && resp.ok) {
             const copy = resp.clone();
-            caches.open(CACHE_NAME).then(c => c.put(e.request, copy)).catch(() => {});
+            caches.open(CACHE_NAME).then(c => c.put(e.request, copy)).catch(err => console.warn('SW cache.put failed:', err));
           }
           return resp;
         })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
+        .catch(() => caches.match(e.request)
+          .then(r => r || caches.match('./index.html'))
+          .then(r => r || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
     );
     return;
   }

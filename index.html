@@ -936,7 +936,7 @@ const GistSync = {
       });
       if (!resp.ok) return null;
       const gists = await resp.json();
-      const match = gists.find(g => g.files['symptom-tracker-data.json']);
+      const match = gists.find(g => g.files && g.files['symptom-tracker-data.json']);
       return match ? match.id : null;
     } catch { return null }
   },
@@ -1529,6 +1529,7 @@ document.getElementById('log-asneeded-btn').addEventListener('click', () => {
     { text: 'Save', cls: 'btn-primary', action: () => {
       const medId = document.getElementById('modal-asneeded-sel').value;
       const med = getMeds().find(m => m.id === medId);
+      if (!med) { closeModal(); return; }
       const logs = getMedLogs();
       logs.push({
         id: Date.now().toString(),
@@ -2082,12 +2083,14 @@ function esc(s) {
 
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d)) return dateStr;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function fmtTime(timeStr) {
   if (!timeStr) return '';
   const [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return timeStr;
   const ampm = h >= 12 ? 'PM' : 'AM';
   const hr = h % 12 || 12;
   return hr + ':' + m.toString().padStart(2, '0') + ' ' + ampm;
